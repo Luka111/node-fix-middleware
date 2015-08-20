@@ -1,14 +1,15 @@
 'use strict';
 
-var soap = require('node-soap');
+var soap = require('soap');
 var http = require('http');
 var fs = require('fs');
 
 var myService = {
-  fixMiddleware: {
+  fixService: {
     exec: {
       Start: function(msg){
         console.log('Data received! - START :\n' + msg);
+        return 'Message successfully recieved!';
       }
     }
   }

@@ -1,12 +1,13 @@
 'use strict';
 
-var soap = require('node-soap');
+var soap = require('soap');
 
-function soapClient(){
+function soapClient(url){
+  this.url = url;
 }
 
-soapClient.prototype.Start = function(url,args){
-  soap.createClient(url,this.StartInit.bind(null,args));
+soapClient.prototype.Start = function(args){
+  soap.createClient(this.url,this.StartInit.bind(null,args));
 };
 
 soapClient.prototype.StartInit = function(args,err,client){
@@ -19,6 +20,17 @@ soapClient.prototype.StartHandler = function(err,result){
     throw err;
   }
   console.log(result);
+};
+
+soapClient.prototype.Desribe = function(){
+  soap.createClient(this.url,this.DescribeInit.bind(null));
+};
+
+soapClient.prototype.DescribeInit = function(err,client){
+  if (err){
+    throw err;
+  }
+  client.describe();
 };
 
 

@@ -2,8 +2,8 @@ var soapServer = require('./soapServer.js');
 var soapClient = require('./soapClient.js');
 
 var server = new soapServer('/fixMiddleware','fix.wsdl');
-var client = new soapClient();
+var client = new soapClient('http://localhost:8000/fixService?wsdl');
 
 server.start();
-//describe first ;)
-client.Start('http://localhost:8000/fixMiddleware?wsdl');
+console.log(client.Desribe());
+//client.Start({msg:'Startujem FIX!'});
