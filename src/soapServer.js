@@ -7,9 +7,9 @@ var fs = require('fs');
 var myService = {
   fixService: {
     exec: {
-      Start: function(msg){
-        console.log('Data received! - START :\n' + msg);
-        return 'Message successfully recieved!';
+      start: function(msg){
+        console.log('[START] Data received! - ' + msg);
+        return {'res':'Message successfully recieved!'};
       }
     }
   }

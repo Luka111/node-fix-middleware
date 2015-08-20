@@ -7,30 +7,30 @@ function soapClient(url){
 }
 
 soapClient.prototype.Start = function(args){
-  soap.createClient(this.url,this.StartInit.bind(null,args));
+  soap.createClient(this.url,this.StartInit.bind(this,args));
 };
 
 soapClient.prototype.StartInit = function(args,err,client){
-  console.log('Zovem Start[RPC]');
-  client.Start(args,this.StartHandler.bind(null));
+  console.log('Zovem Start[RPC] with args:',args);
+  client.start(args,this.StartHandler.bind(this));
 }
 
 soapClient.prototype.StartHandler = function(err,result){
   if (!!err){
     throw err;
   }
-  console.log(result);
+  console.log('RESULT:',result);
 };
 
-soapClient.prototype.Desribe = function(){
-  soap.createClient(this.url,this.DescribeInit.bind(null));
+soapClient.prototype.LogDescribe = function(){
+  soap.createClient(this.url,this.LogDescribeInit.bind(null));
 };
 
-soapClient.prototype.DescribeInit = function(err,client){
+soapClient.prototype.LogDescribeInit = function(err,client){
   if (err){
     throw err;
   }
-  client.describe();
+  console.log('DESCRIBE:',client.describe());
 };
 
 

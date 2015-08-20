@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <wsdl:definitions name="fixMiddleware"
   targetNamespace="http://localhost:8000/fixMiddleware"
-  xmlns="http://localhost:8000/fixMiddleware"
+  xmlns="http://localhos:8000/fixMiddleware"
   xmlns:wsdl="http://schemas.xmlsoap.org/wsdl/"
   xmlns:http="http://schemas.xmlsoap.org/wsdl/http/"
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
@@ -24,7 +24,7 @@
   </wsdl:portType>
 
   <wsdl:binding name="execB" type="execP">
-    <soap:binding style="document" 
+    <soap:binding style="rpc" 
       transport="http://schemas.xmlsoap.org/soap/http"/>
 
     <wsdl:operation name="start">
