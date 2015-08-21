@@ -10,15 +10,15 @@ soapClient.prototype.destroy = function(){
   this.url = null;
 }
 
-soapClient.prototype.Start = function(args){
-  soap.createClient(this.url,this.StartInit.bind(this,args));
+soapClient.prototype.echo = function(args){
+  soap.createClient(this.url,this.EchoInit.bind(this,args));
 };
 
-soapClient.prototype.StartInit = function(args,err,client){
-  client.start(args,this.StartHandler.bind(this));
+soapClient.prototype.EchoInit = function(args,err,client){
+  client.echo(args,this.EchoHandler.bind(this));
 }
 
-soapClient.prototype.StartHandler = function(err,result){
+soapClient.prototype.EchoHandler = function(err,result){
   if (!!err){
     throw err;
   }

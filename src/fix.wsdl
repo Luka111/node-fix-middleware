@@ -7,19 +7,19 @@
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
-  <wsdl:message name="startRequest">
+  <wsdl:message name="echoRequest">
     <wsdl:part name="msg" type="xs:string"></wsdl:part>
   </wsdl:message>
 
-  <wsdl:message name="startResponse">
+  <wsdl:message name="echoResponse">
     <wsdl:part name="res" type="xs:string"></wsdl:part>
   </wsdl:message>
 
 
   <wsdl:portType name="execP">
-    <wsdl:operation name="start">
-      <wsdl:input message="startRequest"></wsdl:input>
-      <wsdl:output message="startResponse"></wsdl:output>
+    <wsdl:operation name="echo">
+      <wsdl:input message="echoRequest"></wsdl:input>
+      <wsdl:output message="echoResponse"></wsdl:output>
     </wsdl:operation>
   </wsdl:portType>
 
@@ -27,8 +27,8 @@
     <soap:binding style="rpc" 
       transport="http://schemas.xmlsoap.org/soap/http"/>
 
-    <wsdl:operation name="start">
-      <soap:operation soapAction="start"/>
+    <wsdl:operation name="echo">
+      <soap:operation soapAction="echo"/>
       <wsdl:input>
         <soap:body use="literal" 
         encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>

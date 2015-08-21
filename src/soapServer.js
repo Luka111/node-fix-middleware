@@ -8,9 +8,10 @@ var fixInitiator = require('./fix/fixInitiator.js');
 var myService = {
   fixService: {
     exec: {
-      start: function(msg){
+      echo : function(msg){
         return {'res':'Message successfully recieved!'};
-      }
+      },
+      sendFixMsg : soapServer.sendFixMsg
     }
   }
 }
@@ -24,7 +25,6 @@ function soapServer(path,fileName){
   this.wsdl = fs.readFileSync(fileName, 'utf8');
   this.soapServer = null;
   this.fixInitiator = new fixInitiator();
-  this.start();
 }
 
 soapServer.prototype.destroy = function(){
@@ -48,12 +48,22 @@ soapServer.prototype.registerEventListeners = function(listeners){
   this.fixInitiator.registerEventLiseners(listeners);
 };
 
-soapServer.prototype.start = function(){
-  this.httpServer.listen(8000);
+soapServer.prototype.start = function(port,cb){
+  this.httpServer.listen(port);
   this.soapServer = soap.listen(this.httpServer,this.path,this.service,this.wsdl);
   this.soapServer.log = this.serverLogging.bind(this); 
-  this.fixInitiator.start();
+  this.fixInitiator.start(cb);
   this.registerEventListeners(listeners);
+};
+
+soapServer.prototype.sendFixMsg = function(msg,cb){
+  try{
+    this.fixInitiator.send(msg,cb); 
+  }catch(err){
+    console.log(err);
+    console.log('Resending msg in 5sec...');
+    setTimeout(this.sendFixMsg(msg,cb),5000);
+  }
 };
 
 module.exports = soapServer;

@@ -57,7 +57,7 @@ Initiator.prototype.start = function(cb){
 };
 
 Initiator.prototype.successfullyStarted = function(cb){
-	console.log('FIX Initiator Started');
+  console.log('FIX Initiator Started');
   this.started = true;
   if (!!cb){
     cb('FIX Initiator successfully started!');
