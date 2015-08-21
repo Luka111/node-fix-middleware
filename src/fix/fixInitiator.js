@@ -1,3 +1,5 @@
+'use strict';
+
 var df = require('dateformat');
 var events = require('events');
 var quickfix = require('node-quickfix');
@@ -29,7 +31,7 @@ var emitOptions = {
 };
 
 var options = {
-  propertiesFile: "./initiatorProperties.properties"
+  propertiesFile: './initiatorProperties.properties'
 };
 
 // extend prototype
@@ -63,6 +65,9 @@ Initiator.prototype.successfullyStarted = function(cb){
 };
 
 Initiator.prototype.send = function(msg,cb){
+  if (!this.started){
+    throw new Error('FIX Initiator is not started!');
+  }
   this.quickfixInitiator.send(msg,this.successfullySent.bind(this,cb));
 };
 

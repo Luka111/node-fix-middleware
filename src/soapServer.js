@@ -52,6 +52,7 @@ soapServer.prototype.start = function(){
   this.httpServer.listen(8000);
   this.soapServer = soap.listen(this.httpServer,this.path,this.service,this.wsdl);
   this.soapServer.log = this.serverLogging.bind(this); 
+  this.fixInitiator.start();
   this.registerEventListeners(listeners);
 };
 

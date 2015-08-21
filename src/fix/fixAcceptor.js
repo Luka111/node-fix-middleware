@@ -1,26 +1,11 @@
+'use strict';
+
 var events = require('events');
-var path = require('path');
-var quickfix = require('../index');
-var fixAcceptor = quickfix.acceptor;
+var quickfix = require('node-quickfix');
 
-var logonProvider = new quickfix.logonProvider(function (logonResponse, msg, sessionId) {	
-	if(msg.tags[553] == 'USERNAME' && msg.tags[554] == 'PASSWORD') {
-		logonResponse.done(true);
-	} else {
-		logonResponse.done(false);
-	}
-});
+var quickfixAcceptor = quickfix.acceptor;
 
-// extend prototype
-function inherits (target, source) {
-  for (var k in source.prototype)
-    target.prototype[k] = source.prototype[k];
-}
-
-inherits(fixAcceptor, events.EventEmitter);
-
-var fixServer = new fixAcceptor(
-{
+var emitOptions = {
   onCreate: function(sessionID) {
     fixServer.emit('onCreate', { sessionID: sessionID });
   },
@@ -42,22 +27,48 @@ var fixServer = new fixAcceptor(
   fromApp: function(message, sessionID) {
     fixServer.emit('fromApp', { message: message, sessionID: sessionID });
   }
-}, {
-  logonProvider: logonProvider, 
-  propertiesFile: path.join(__dirname, 'nodeQuickfixExample.properties')
-});
+};
 
-['onCreate',
-'onLogon',
-'onLogout',
-'onLogonAttempt',
-'toAdmin',
-'fromAdmin',
-'fromApp'].forEach(function (event) {
-  fixServer.on(event, console.log.bind(null, event));
-});
+var options = {
+  propertiesFile: './acceptorProperties.properties'
+};
 
-fixServer.start(function() {
-	console.log("FIX Acceptor Started");
-  process.stdin.resume();
-});
+// extend prototype
+function inherits (target, source) {
+  for (var k in source.prototype)
+    target.prototype[k] = source.prototype[k];
+}
+
+inherits(quickfixAcceptor, events.EventEmitter);
+
+function Acceptor(){
+  this.quickfixAcceptor = new quickfixAcceptor(emitOptions, options);
+  this.started = false;
+  this.eventNames = ['onCreate','onLogon','onLogout','onLogonAttempt','toAdmin','fromAdmin','fromApp'];
+}
+
+Acceptor.prototype.destroy = function(){
+  this.quickfixAcceptor = null;
+  this.started = null;
+};
+
+Acceptor.prototype.start = function(cb){
+  this.quickfixAcceptor.start(this.successfullyStarted.bind(this,cb));
+};
+
+Acceptor.prototype.successfullyStarted = function(cb){
+	console.log('FIX Acceptor Started');
+  this.started = true;
+  this.registerEventListeners();
+  if (!!cb){
+    cb('FIX Acceptor successfully started!');
+  }
+};
+
+Acceptor.prototype.registerEventListeners = function(){
+  this.eventNames.forEach(function (event) {
+    this.quickfixAcceptor.on(event, console.log.bind(null, event));
+  });
+};
+
+module.exports = Acceptor;
