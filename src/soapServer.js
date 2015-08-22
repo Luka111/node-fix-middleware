@@ -67,10 +67,11 @@ soapServer.prototype.start = function(port,cb){
   this.registerEventListeners(listeners);
 };
 
-soapServer.prototype.sendFixMsg = function(msg){
+soapServer.prototype.sendFixMsg = function(msg,cb){
   //TODO callback instead of null
   try{
-    this.fixInitiator.send(msg,null); 
+    this.fixInitiator.send(msg); 
+    cb({msg : 'Successfully sent!!!'});
   }catch(err){
     console.log(err);
     console.log('Resending msg in 5sec...');

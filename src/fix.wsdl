@@ -57,10 +57,6 @@
         <soap:body use="literal" 
         encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
-      <wsdl:output>
-        <soap:body use="literal" 
-        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
-      </wsdl:output>
     </wsdl:operation>
 
   </wsdl:binding>

@@ -53,6 +53,7 @@ soapClient.prototype.sendFixMsgHandler = function(err,result){
   if (!!err){
     throw err;
   }
+  console.log('OVDE GA DOBIJAM SIGURNO',result.msg);
 };
 
 module.exports = soapClient;

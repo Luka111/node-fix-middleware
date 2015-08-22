@@ -6,24 +6,20 @@ var soapServer = require('./soapServer.js');
 var soapClient = require('./soapClient.js');
 var fixAcceptor = require('./fix/fixAcceptor.js');
 
-function execOnSoapServerStart(msg){
-  console.log('***',msg);
-}
-
-function execOnFixAcceptorStart(msg){
+function execOnSuccess(msg){
   console.log('***',msg);
 }
 
 //creating soap server
 var server = new soapServer('/fixMiddleware','fix.wsdl');
 //starting soap server
-server.start(8000,execOnSoapServerStart);
+server.start(8000,execOnSuccess);
 //creating soap client
 var client = new soapClient('http://localhost:8000/fixMiddleware?wsdl');
 //creating fixAcceptor
 var acceptor = new fixAcceptor();
 //starting fixAcceptor
-acceptor.start(execOnFixAcceptorStart);
+acceptor.start(execOnSuccess);
 
 //describe
 client.LogDescribe();

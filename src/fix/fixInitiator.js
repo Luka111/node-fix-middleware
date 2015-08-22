@@ -79,18 +79,15 @@ Initiator.prototype.successfullyStarted = function(cb){
   }
 };
 
-Initiator.prototype.send = function(msg,cb){
+Initiator.prototype.send = function(msg){
   if (!this.started){
     throw new Error('FIX Initiator is not started!');
   }
-  this.quickfixInitiator.send(msg,this.successfullySent.bind(this,cb));
+  this.quickfixInitiator.send(msg,this.successfullySent.bind(this));
 };
 
-Initiator.prototype.successfullySent = function(cb){
+Initiator.prototype.successfullySent = function(){
   console.log('Message successfully sent!');
-  if (!!cb){
-    cb('Message successfully sent!');
-  }
 };
 
 Initiator.prototype.registerEventListeners = function(listeners){
