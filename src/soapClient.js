@@ -3,6 +3,8 @@
 var soap = require('soap');
 
 function soapClient(url){
+  if (!url) throw new Error('No url provided!');
+  if (typeof url !== 'string') throw new Error('url must be string!');
   this.url = url;
 }
 
@@ -22,6 +24,9 @@ soapClient.prototype.LogDescribeInit = function(err,client){
 };
 
 soapClient.prototype.echo = function(args){
+  if (!args) throw new Error('Argument MUST be provided!');
+  //TODO instead of object make a strict message structure in wsdl file
+  if (typeof args !== 'object') throw new Error('Provided argument MUST be an object');
   soap.createClient(this.url,this.EchoInit.bind(this,args));
 };
 
@@ -39,6 +44,10 @@ soapClient.prototype.EchoHandler = function(err,result){
 };
 
 soapClient.prototype.sendFixMsg = function(args){
+  if (!args) throw new Error('Argument MUST be provided!');
+  //TODO instead of object make a strict message structure in wsdl file
+  if (typeof args !== 'object') throw new Error('Provided argument MUST be an object');
+  if (!args.hasOwnProperty('header')) throw new Error('Argument object must have property header');
   soap.createClient(this.url,this.sendFixMsgInit.bind(this,args));
 };
 
@@ -53,7 +62,7 @@ soapClient.prototype.sendFixMsgHandler = function(err,result){
   if (!!err){
     throw err;
   }
-  console.log('OVDE GA DOBIJAM SIGURNO',result.msg);
+  console.log('Result : ',result.msg);
 };
 
 module.exports = soapClient;

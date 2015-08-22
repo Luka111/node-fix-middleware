@@ -64,6 +64,8 @@ function Initiator(){
 }
 
 Initiator.prototype.destroy = function(){
+  this.quickfixInitiator.stop();
+  this.quickfixInitiator = null;
   this.started = null;
 };
 

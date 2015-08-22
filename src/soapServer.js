@@ -19,9 +19,22 @@ soapService.prototype.destroy = function(){
   this.fixService = {};
 };
 
-var listeners = {}; //event listeners on fix initiator - { eventName : callback }
+//event listeners on fix initiator - { eventName : callback }
+function Listeners(){
+  //example*
+  //this.onCreate = null;
+}
+
+Listeners.prototype.destroy = function(){
+  //example**
+  //this.onCreate = null;
+};
 
 function soapServer(path,fileName){
+  if (!path) throw new Error('No path provided!');
+  if (typeof path !== 'string') throw new Error('Path must be string!');
+  if (!fileName) throw new Error('No fileName provided!');
+  if (typeof fileName !== 'string') throw new Error('fileName must be string!');
   this.httpServer = http.createServer(this.createServer.bind(this));
   this.path = path;
   this.service = new soapService();
@@ -30,6 +43,9 @@ function soapServer(path,fileName){
   this.wsdl = fs.readFileSync(fileName, 'utf8');
   this.soapServer = null;
   this.fixInitiator = new fixInitiator();
+  this.listeners = new Listeners();
+  //example***
+  //this.listeners.onCreate = this.someEventListener.bind(this);
 }
 
 soapServer.prototype.destroy = function(){
@@ -41,6 +57,8 @@ soapServer.prototype.destroy = function(){
   this.soapServer = null;
   this.fixInitiator.destroy();
   this.fixInitiator = null;
+  this.listeners.destroy();
+  this.listeners = null;
 };
 
 soapServer.prototype.echoCallback = function(msg){
@@ -55,8 +73,8 @@ soapServer.prototype.serverLogging = function(type,data){
   console.log(type.toUpperCase() + ': ' + data);
 };
 
-soapServer.prototype.registerEventListeners = function(listeners){
-  this.fixInitiator.registerEventListeners(listeners);
+soapServer.prototype.registerEventListeners = function(){
+  this.fixInitiator.registerEventListeners(this.listeners);
 };
 
 soapServer.prototype.start = function(port,cb){
@@ -64,19 +82,28 @@ soapServer.prototype.start = function(port,cb){
   this.soapServer = soap.listen(this.httpServer,this.path,this.service,this.wsdl);
   this.soapServer.log = this.serverLogging.bind(this); 
   this.fixInitiator.start(cb);
-  this.registerEventListeners(listeners);
+  this.registerEventListeners(this.listeners);
 };
 
 soapServer.prototype.sendFixMsg = function(msg,cb){
-  //TODO callback instead of null
+  var isValid = this.checkFIXMessageStructure(msg);
+  if (!isValid) throw new Error('Message structure not valid!');
   try{
     this.fixInitiator.send(msg); 
     cb({msg : 'Successfully sent!!!'});
   }catch(err){
-    console.log(err);
+    console.log('ERROR: ',err);
     console.log('Resending msg in 5sec...');
-    setTimeout(this.sendFixMsg.bind(msg,null),5000);
+    setTimeout(this.sendFixMsg.bind(this,msg,cb),5000);
   }
+};
+
+soapServer.prototype.checkFIXMessageStructure = function(msg){
+  //TODO check FIX message structure
+  if (!msg.hasOwnProperty('header')){
+    return false;
+  }
+  return true;
 };
 
 module.exports = soapServer;

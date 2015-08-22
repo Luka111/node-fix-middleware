@@ -48,5 +48,9 @@ var order = {
   }
 };
 
+var order1 = {
+  a : 2
+}
+
 //sending FIX msg
 client.sendFixMsg(order);

@@ -63,6 +63,7 @@ function Acceptor(){
 }
 
 Acceptor.prototype.destroy = function(){
+  this.quickfixAcceptor.stop();
   this.quickfixAcceptor = null;
   this.started = null;
 };
