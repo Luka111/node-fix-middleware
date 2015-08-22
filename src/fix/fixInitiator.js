@@ -3,36 +3,9 @@
 var df = require('dateformat');
 var events = require('events');
 var quickfix = require('node-quickfix');
+var path = require('path');
 
 var quickfixInitiator = quickfix.initiator;
-
-var emitOptions = {
-  onCreate: function(sessionID) {
-    fixClient.emit('onCreate', { sessionID: sessionID });
-  },
-  onLogon: function(sessionID) {
-    fixClient.emit('onLogon', { sessionID: sessionID });
-  },
-  onLogout: function(sessionID) {
-    fixClient.emit('onLogout', { sessionID: sessionID });
-  },
-  onLogonAttempt: function(message, sessionID) {
-    fixClient.emit('onLogonAttempt', { message: message, sessionID: sessionID });
-  },
-  toAdmin: function(message, sessionID) {
-    fixClient.emit('toAdmin', { message: message, sessionID: sessionID });
-  },
-  fromAdmin: function(message, sessionID) {
-    fixClient.emit('fromAdmin', { message: message, sessionID: sessionID });
-  },
-  fromApp: function(message, sessionID) {
-    fixClient.emit('fromApp', { message: message, sessionID: sessionID });
-  }
-};
-
-var options = {
-  propertiesFile: './initiatorProperties.properties'
-};
 
 // extend prototype
 function inherits(target, source) {
@@ -42,6 +15,48 @@ function inherits(target, source) {
 }
 
 inherits(quickfixInitiator, events.EventEmitter)
+
+quickfixInitiator.prototype.onCreate = function(sessionID) {
+  this.emit('onCreate', { sessionID: sessionID });
+};
+
+quickfixInitiator.prototype.onLogon = function(sessionID) {
+  this.emit('onLogon', { sessionID: sessionID });
+};
+
+quickfixInitiator.prototype.onLogout = function(sessionID) {
+  this.emit('onLogout', { sessionID: sessionID });
+};
+
+quickfixInitiator.prototype.onLogonAttempt = function(message, sessionID) {
+  this.emit('onLogonAttempt', { message: message, sessionID: sessionID });
+};
+
+quickfixInitiator.prototype.toAdmin = function(message, sessionID) {
+  this.emit('toAdmin', { message: message, sessionID: sessionID });
+};
+
+quickfixInitiator.prototype.fromAdmin = function(message, sessionID) {
+  this.emit('fromAdmin', { message: message, sessionID: sessionID });
+};
+
+quickfixInitiator.prototype.fromApp = function(message, sessionID) {
+  this.emit('fromApp', { message: message, sessionID: sessionID });
+};
+
+var emitOptions = {
+  onCreate: quickfixInitiator.onLogout,
+  onLogon: quickfixInitiator.onLogon,
+  onLogout: quickfixInitiator.onLogout,
+  onLogonAttempt: quickfixInitiator.onLogonAttempt,
+  toAdmin: quickfixInitiator.toAdmin,
+  fromAdmin: quickfixInitiator.fromAdmin,
+  fromApp: quickfixInitiator.fromApp,
+};
+
+var options = {
+  propertiesFile: path.join(__dirname,'initiatorProperties.properties')
+};
 
 function Initiator(){
   this.quickfixInitiator = new quickfixInitiator(emitOptions,options);

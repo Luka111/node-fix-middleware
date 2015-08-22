@@ -15,11 +15,23 @@
     <wsdl:part name="res" type="xs:string"></wsdl:part>
   </wsdl:message>
 
+  <wsdl:message name="sendFixMsgRequest">
+    <wsdl:part name="msg" type="xs:string"></wsdl:part>
+  </wsdl:message>
+
+  <wsdl:message name="sendFixMsgResponse">
+    <wsdl:part name="res" type="xs:string"></wsdl:part>
+  </wsdl:message>
+
 
   <wsdl:portType name="execP">
     <wsdl:operation name="echo">
       <wsdl:input message="echoRequest"></wsdl:input>
       <wsdl:output message="echoResponse"></wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="sendFixMsg">
+      <wsdl:input message="sendFixMsgRequest"></wsdl:input>
+      <wsdl:output message="sendFixMsgResponse"></wsdl:output>
     </wsdl:operation>
   </wsdl:portType>
 
@@ -29,6 +41,18 @@
 
     <wsdl:operation name="echo">
       <soap:operation soapAction="echo"/>
+      <wsdl:input>
+        <soap:body use="literal" 
+        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" 
+        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:output>
+    </wsdl:operation>
+
+    <wsdl:operation name="sendFixMsg">
+      <soap:operation soapAction="sendFixMsg"/>
       <wsdl:input>
         <soap:body use="literal" 
         encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>

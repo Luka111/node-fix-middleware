@@ -2,36 +2,9 @@
 
 var events = require('events');
 var quickfix = require('node-quickfix');
+var path = require('path');
 
 var quickfixAcceptor = quickfix.acceptor;
-
-var emitOptions = {
-  onCreate: function(sessionID) {
-    fixServer.emit('onCreate', { sessionID: sessionID });
-  },
-  onLogon: function(sessionID) {
-    fixServer.emit('onLogon', { sessionID: sessionID });
-  },
-  onLogout: function(sessionID) {
-    fixServer.emit('onLogout', { sessionID: sessionID });
-  },
-  onLogonAttempt: function(message, sessionID) {
-    fixServer.emit('onLogonAttempt', { message: message, sessionID: sessionID });
-  },
-  toAdmin: function(message, sessionID) {
-    fixServer.emit('toAdmin', { message: message, sessionID: sessionID });
-  },
-  fromAdmin: function(message, sessionID) {
-    fixServer.emit('fromAdmin', { message: message, sessionID: sessionID });
-  },
-  fromApp: function(message, sessionID) {
-    fixServer.emit('fromApp', { message: message, sessionID: sessionID });
-  }
-};
-
-var options = {
-  propertiesFile: './acceptorProperties.properties'
-};
 
 // extend prototype
 function inherits (target, source) {
@@ -40,6 +13,48 @@ function inherits (target, source) {
 }
 
 inherits(quickfixAcceptor, events.EventEmitter);
+
+quickfixAcceptor.prototype.onCreate = function(sessionID) {
+  this.emit('onCreate', { sessionID: sessionID });
+};
+
+quickfixAcceptor.prototype.onLogon = function(sessionID) {
+  this.emit('onLogon', { sessionID: sessionID });
+};
+
+quickfixAcceptor.prototype.onLogout = function(sessionID) {
+  this.emit('onLogout', { sessionID: sessionID });
+};
+
+quickfixAcceptor.prototype.onLogonAttempt = function(message, sessionID) {
+  this.emit('onLogonAttempt', { message: message, sessionID: sessionID });
+};
+
+quickfixAcceptor.prototype.toAdmin = function(message, sessionID) {
+  this.emit('toAdmin', { message: message, sessionID: sessionID });
+};
+
+quickfixAcceptor.prototype.fromAdmin = function(message, sessionID) {
+  this.emit('fromAdmin', { message: message, sessionID: sessionID });
+};
+
+quickfixAcceptor.prototype.fromApp = function(message, sessionID) {
+  this.emit('fromApp', { message: message, sessionID: sessionID });
+};
+
+var emitOptions = {
+  onCreate: quickfixAcceptor.onLogout,
+  onLogon: quickfixAcceptor.onLogon,
+  onLogout: quickfixAcceptor.onLogout,
+  onLogonAttempt: quickfixAcceptor.onLogonAttempt,
+  toAdmin: quickfixAcceptor.toAdmin,
+  fromAdmin: quickfixAcceptor.fromAdmin,
+  fromApp: quickfixAcceptor.fromApp,
+};
+
+var options = {
+  propertiesFile: path.join(__dirname,'acceptorProperties.properties')
+};
 
 function Acceptor(){
   this.quickfixAcceptor = new quickfixAcceptor(emitOptions, options);
@@ -66,9 +81,11 @@ Acceptor.prototype.successfullyStarted = function(cb){
 };
 
 Acceptor.prototype.registerEventListeners = function(){
-  this.eventNames.forEach(function (event) {
-    this.quickfixAcceptor.on(event, console.log.bind(null, event));
-  });
+  this.eventNames.forEach(this.registerListener.bind(this));
+};
+
+Acceptor.prototype.registerListener = function(event){
+  this.quickfixAcceptor.on(event, console.log.bind(null, event));
 };
 
 module.exports = Acceptor;

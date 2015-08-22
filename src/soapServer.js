@@ -5,23 +5,28 @@ var http = require('http');
 var fs = require('fs');
 var fixInitiator = require('./fix/fixInitiator.js');
 
-var myService = {
-  fixService: {
-    exec: {
-      echo : function(msg){
-        return {'res':'Message successfully recieved!'};
-      },
-      sendFixMsg : soapServer.sendFixMsg
-    }
-  }
+function soapService(){
+  this.fixService = {};
+  this.fixService.exec = {};
+  this.fixService.exec.echo = null;
+  this.fixService.exec.sendFixMsg = null;
 }
+
+soapService.prototype.destroy = function(){
+  this.fixService.exec.sendFixMsg = null;
+  this.fixService.exec.echo = null;
+  this.fixService.exec = {};
+  this.fixService = {};
+};
 
 var listeners = {}; //event listeners on fix initiator - { eventName : callback }
 
 function soapServer(path,fileName){
   this.httpServer = http.createServer(this.createServer.bind(this));
   this.path = path;
-  this.service = myService;
+  this.service = new soapService();
+  this.service.fixService.exec.echo = this.echoCallback.bind(this);
+  this.service.fixService.exec.sendFixMsg = this.sendFixMsg.bind(this);
   this.wsdl = fs.readFileSync(fileName, 'utf8');
   this.soapServer = null;
   this.fixInitiator = new fixInitiator();
@@ -30,10 +35,16 @@ function soapServer(path,fileName){
 soapServer.prototype.destroy = function(){
   this.httpServer = null;
   this.path = null;
+  this.service.destroy();
   this.service = null;
   this.wsdl = null;
   this.soapServer = null;
+  this.fixInitiator.destroy();
   this.fixInitiator = null;
+};
+
+soapServer.prototype.echoCallback = function(msg){
+  return {'res':'Message successfully recieved!'};
 };
 
 soapServer.prototype.createServer = function(req,res){
@@ -45,7 +56,7 @@ soapServer.prototype.serverLogging = function(type,data){
 };
 
 soapServer.prototype.registerEventListeners = function(listeners){
-  this.fixInitiator.registerEventLiseners(listeners);
+  this.fixInitiator.registerEventListeners(listeners);
 };
 
 soapServer.prototype.start = function(port,cb){
@@ -56,13 +67,14 @@ soapServer.prototype.start = function(port,cb){
   this.registerEventListeners(listeners);
 };
 
-soapServer.prototype.sendFixMsg = function(msg,cb){
+soapServer.prototype.sendFixMsg = function(msg){
+  //TODO callback instead of null
   try{
-    this.fixInitiator.send(msg,cb); 
+    this.fixInitiator.send(msg,null); 
   }catch(err){
     console.log(err);
     console.log('Resending msg in 5sec...');
-    setTimeout(this.sendFixMsg(msg,cb),5000);
+    setTimeout(this.sendFixMsg.bind(msg,null),5000);
   }
 };
 
