@@ -10,23 +10,8 @@ function execOnSuccess(msg){
   console.log('***',msg);
 }
 
-//creating fixAcceptor
-var acceptor = new fixAcceptor();
-//starting fixAcceptor
-acceptor.start(execOnSuccess);
-//creating soap server
-var server = new soapServer('/fixMiddleware','fix.wsdl');
-//starting soap server
-server.start(8000,execOnSuccess);
-//creating soap client
-var client = new soapClient('http://localhost:8000/fixMiddleware?wsdl');
+var settings = '[DEFAULT]\nReconnectInterval=60\nPersistMessages=Y\nFileStorePath=../data\nFileLogPath=../log\n\n[SESSION]\nConnectionType=initiator\nSenderCompID=NODEQUICKFIX\nTargetCompID=ELECTRONIFIE\nBeginString=FIX.4.4\nStartTime=00:00:00\nEndTime=23:59:59\nHeartBtInt=30\nSocketConnectPort=3223\nSocketConnectHost=localhost\nUseDataDictionary=Y\nDataDictionary=../node_modules/node-quickfix/quickfix/spec/FIX44.xml\nResetOnLogon=Y';
 
-//describe
-//client.LogDescribe();
-//echo testing msg
-//client.echo({'msg':'Startujem FIX!'});
-
-//test FIX msg
 var order = {
   header: {
     8: 'FIX.4.4',
@@ -74,12 +59,30 @@ var order5 = {
     t423: 6
   }
 };
+//creating fixAcceptor
+var acceptor = new fixAcceptor();
+//starting fixAcceptor
+acceptor.start(execOnSuccess);
+//creating soap client
+var client = new soapClient('http://localhost:8000/fixMiddleware?wsdl');
+//creating soap server
+var server = new soapServer('/fixMiddleware','fix.wsdl');
+//starting soap server
+server.start(8000);
+//starting fix initiator
+client.startFixInitiator({settings : settings});
+
+//describe
+//client.LogDescribe();
+//echo testing msg
+//client.echo({'msg':'Startujem FIX!'});
+
+//test FIX msg
 
 //sending FIX msg
-acceptor.send(order)
-client.sendFixMsg(order5);
 setTimeout(function(){
-  //acceptor.send(order)
-  //acceptor.send(order)
+  //acceptor.send(order);
+  acceptor.send(order);
+  client.sendFixMsg(order5);
   client.recieveFixMessages();
 },10000);

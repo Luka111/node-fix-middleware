@@ -63,6 +63,14 @@
         </xs:complexType>
       </xs:element>
 
+      <xs:element name="settings">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="settings" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
     </xs:schema>
   </wsdl:types>
 
@@ -84,13 +92,17 @@
   </wsdl:message>
 
   <wsdl:message name="fixError">
-    <wsdl:part name="res" element="tns:fixError"></wsdl:part>
+    <wsdl:part name="err" element="tns:fixError"></wsdl:part>
   </wsdl:message>
 
   <wsdl:message name="empty"/>
 
   <wsdl:message name="fixMsgArray">
     <wsdl:part name="res" element="tns:fixMsgArray"></wsdl:part>
+  </wsdl:message>
+
+  <wsdl:message name="settings">
+    <wsdl:part name="msg" element="tns:settings"></wsdl:part>
   </wsdl:message>
 
 
@@ -108,6 +120,10 @@
     <wsdl:operation name="recieveFixMessages">
       <wsdl:input message="empty"></wsdl:input>
       <wsdl:output message="tns:fixMsgArray"></wsdl:output>
+    </wsdl:operation>
+    <wsdl:operation name="startFixInitiator">
+      <wsdl:input message="tns:settings"></wsdl:input>
+      <wsdl:output message="empty"></wsdl:output>
     </wsdl:operation>
   </wsdl:portType>
 
@@ -145,7 +161,19 @@
     </wsdl:operation>
 
     <wsdl:operation name="recieveFixMessages">
-      <soap:operation soapAction="sendFixMsg"/>
+      <soap:operation soapAction="recieveFixMessages"/>
+      <wsdl:input>
+        <soap:body use="literal" 
+        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" 
+        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:output>
+    </wsdl:operation>
+
+    <wsdl:operation name="startFixInitiator">
+      <soap:operation soapAction="startFixInitiator"/>
       <wsdl:input>
         <soap:body use="literal" 
         encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>

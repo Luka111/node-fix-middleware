@@ -103,6 +103,22 @@ soapClient.prototype.recieveFixMessagesHandler = function(err,result){
   return result;
 };
 
+soapClient.prototype.startFixInitiator = function(settings){
+  soap.createClient(this.url,this.startFixInitiatorInit.bind(this,settings));
+};
+
+soapClient.prototype.startFixInitiatorInit = function(settings,err,client){
+  client.startFixInitiator(settings,this.startFixInitiatorHandler.bind(this));
+};
+
+soapClient.prototype.startFixInitiatorHandler = function(err,result){
+  if (!!err){
+    throw err;
+  }
+  console.log('Successfully started FIX initiator!');
+  return result;
+};
+
 soapClient.prototype.decodeArray = function(result,elem){
   var decodedObj = Coder.decodeFIXmessage(elem);
   if (decodedObj === undefined){

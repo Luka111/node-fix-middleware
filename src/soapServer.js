@@ -13,9 +13,12 @@ function soapService(){
   this.fixService.exec.echo = null;
   this.fixService.exec.sendFixMsg = null;
   this.fixService.exec.recieveFixMessages = null;
+  this.fixService.exec.startFixInitiator = null;
 }
 
 soapService.prototype.destroy = function(){
+  this.fixService.exec.startFixInitiator = null;
+  this.fixService.exec.recieveFixMessages = null;
   this.fixService.exec.sendFixMsg = null;
   this.fixService.exec.echo = null;
   this.fixService.exec = {};
@@ -33,9 +36,10 @@ function soapServer(path,fileName){
   this.service.fixService.exec.echo = this.echoCallback.bind(this);
   this.service.fixService.exec.sendFixMsg = this.sendFixMsg.bind(this);
   this.service.fixService.exec.recieveFixMessages = this.recieveFixMessages.bind(this);
+  this.service.fixService.exec.startFixInitiator = this.startFixInitiator.bind(this);
   this.wsdl = fs.readFileSync(fileName, 'utf8');
   this.soapServer = null;
-  this.fixInitiator = new fixInitiator();
+  this.fixInitiator = null;
   this.listeners = new Listeners();
   this.listeners.onCreate = this.onCreateListener.bind(this);
   this.listeners.onLogon = this.onLogonListener.bind(this);
@@ -56,7 +60,9 @@ soapServer.prototype.destroy = function(){
   this.service = null;
   this.wsdl = null;
   this.soapServer = null;
-  this.fixInitiator.destroy();
+  if (!!this.fixInitiator){
+    this.fixInitiator.destroy();
+  }
   this.fixInitiator = null;
   this.listeners.destroy();
   this.listeners = null;
@@ -76,19 +82,19 @@ soapServer.prototype.serverLogging = function(type,data){
   console.log(type.toUpperCase() + ': ' + data);
 };
 
-soapServer.prototype.registerEventListeners = function(){
-  this.fixInitiator.registerEventListeners(this.listeners);
-};
-
-soapServer.prototype.start = function(port,cb){
+soapServer.prototype.start = function(port){
   this.httpServer.listen(port);
   this.soapServer = soap.listen(this.httpServer,this.path,this.service,this.wsdl);
   this.soapServer.log = this.serverLogging.bind(this); 
-  this.fixInitiator.start(cb);
-  this.registerEventListeners();
 };
 
 //FIX event listeners
+
+soapServer.prototype.startFixInitiator = function(msg){
+  this.fixInitiator = new fixInitiator(msg.settings);
+  this.fixInitiator.start();
+  this.fixInitiator.registerEventListeners(this.listeners);
+};
 
 soapServer.prototype.onCreateListener = function(sessionID){
   console.log('INITIATOR EVENT onCreate: got Session ID - ' + JSON.stringify(sessionID));
@@ -140,9 +146,20 @@ soapServer.prototype.echoCallback = function(msg){
 };
 
 soapServer.prototype.sendFixMsg = function(msg,cb){
+  //TODO testing if fix initiator is not started
+  if (!this.fixInitiator){
+    throw new soapError('soap:Sender','rpc:fixInitiatorNotStarted','Fix initiator is not started!')
+  }
   var decodedMsg = this.decodeMsg(msg);
   this.sendDecodedFixMsg(decodedMsg,cb);
 };
+
+soapServer.prototype.recieveFixMessages = function(){
+  this.clearMessageQueueOnNextMsg = true;
+  return this.messageQueue;
+};
+
+//Intern methods
 
 soapServer.prototype.sendDecodedFixMsg = function(decodedMsg,cb){
   try{
@@ -154,13 +171,6 @@ soapServer.prototype.sendDecodedFixMsg = function(decodedMsg,cb){
     setTimeout(this.sendDecodedFixMsg.bind(this,decodedMsg,cb),5000);
   }
 };
-
-soapServer.prototype.recieveFixMessages = function(){
-  this.clearMessageQueueOnNextMsg = true;
-  return this.messageQueue;
-};
-
-//Intern methods
 
 soapServer.prototype.decodeMsg = function(msg){
   if (!msg.hasOwnProperty('header')){

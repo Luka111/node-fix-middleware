@@ -20,7 +20,11 @@ var options = {
   propertiesFile: path.join(__dirname,'initiatorProperties.properties')
 };
 
-function Initiator(){
+function Initiator(settings){
+  if (!!settings){
+    delete options.propertiesFile;
+    options.settings = settings;
+  }
   var initiator = new quickfixInitiator({
     onCreate: function(sessionID) {
       initiator.emit('onCreate', { sessionID: sessionID });
@@ -56,16 +60,13 @@ Initiator.prototype.destroy = function(){
   this.connectionEstablished = null;
 };
 
-Initiator.prototype.start = function(cb){
-  this.quickfixInitiator.start(this.successfullyStarted.bind(this,cb));
+Initiator.prototype.start = function(){
+  this.quickfixInitiator.start(this.successfullyStarted.bind(this));
 };
 
-Initiator.prototype.successfullyStarted = function(cb){
+Initiator.prototype.successfullyStarted = function(){
   console.log('FIX Initiator Started');
   this.started = true;
-  if (!!cb){
-    cb('FIX Initiator successfully started!');
-  }
 };
 
 //Getters/setters
