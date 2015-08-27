@@ -87,39 +87,27 @@ soapClient.prototype.recieveFixMessagesHandler = function(err,result){
     throw err;
   }
   var decodedResult;
+  //TODO testing for all types
   if (result instanceof Array){
     decodedResult = [];
     result.forEach(this.decodeArray.bind(this,decodedResult));
   }else{
-    decodedResult = this.decodeElement(result);
+    if (result instanceof Object){
+      decodedResult = Coder.decodeFIXmessage(result);
+      if (decodedResult === undefined){
+        throw new Error('Error in decoding tags. Invalid tag.')
+      }
+    }
   }
   console.log('EVO DECODOVANE FIX PORUKE U NIZU',JSON.stringify(decodedResult));
   return result;
 };
 
-soapClient.prototype.decodeElement = function(codedElement){
-  var decodedResult = {};
-  //TODO testing for missing properties, for example no tags property
-  decodedResult.header = {};
-  var invalidKey = Coder.decodeObject(codedElement.header,decodedResult.header,Coder.codedTagRegexp);
-  if (invalidKey !== null){
-    throw new Error('Decoded Header tag ' + invalidKey + ' is not valid')
-  }
-  decodedResult.tags= {};
-  var invalidKey = Coder.decodeObject(codedElement.tags,decodedResult.tags,Coder.codedTagRegexp);
-  if (invalidKey !== null){
-    throw new Error('Decoded Header tag ' + invalidKey + ' is not valid')
-  }
-  decodedResult.trailer= {};
-  var invalidKey = Coder.decodeObject(codedElement.trailer,decodedResult.trailer,Coder.codedTagRegexp);
-  if (invalidKey !== null){
-    throw new Error('Decoded Header tag ' + invalidKey + ' is not valid')
-  }
-  return decodedResult;
-};
-
 soapClient.prototype.decodeArray = function(result,elem){
-  var decodedObj = this.decodeElement(elem);
+  var decodedObj = Coder.decodeFIXmessage(elem);
+  if (decodedObj === undefined){
+    throw new Error('Error in decoding tags. Invalid tag.')
+  }
   result.push(decodedObj);
 };
 

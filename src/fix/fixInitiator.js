@@ -46,12 +46,14 @@ function Initiator(){
   },options);
   this.quickfixInitiator = initiator;
   this.started = false;
+  this.connectionEstablished = false;
 }
 
 Initiator.prototype.destroy = function(){
   this.quickfixInitiator.stop();
   this.quickfixInitiator = null;
   this.started = null;
+  this.connectionEstablished = null;
 };
 
 Initiator.prototype.start = function(cb){
@@ -66,9 +68,25 @@ Initiator.prototype.successfullyStarted = function(cb){
   }
 };
 
+//Getters/setters
+
+Initiator.prototype.setConnectionEstablished = function(val){
+  if (typeof val !== 'boolean'){
+    throw new Error('Parametar: ' + val + ' .setConnectionEstablished accepts boolean as a parameter.');
+  }
+  this.connectionEstablished = val;
+};
+
+Initiator.prototype.getConnectionEstablished = function(val){
+  return this.connectionEstablished;
+};
+
 Initiator.prototype.send = function(msg){
   if (!this.started){
     throw new Error('FIX Initiator is not started!');
+  }
+  if (!this.connectionEstablished){
+    throw new Error('Connection to FIX Acceptor is not established!');
   }
   this.quickfixInitiator.send(msg,this.successfullySent.bind(this));
 };

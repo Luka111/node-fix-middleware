@@ -262,3 +262,115 @@
 20150827-00:04:01.075 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
 20150827-00:04:01.076 : Received logon request
 20150827-00:04:01.076 : Responding to logon request
+20150827-00:07:32.609 : Created session
+20150827-00:08:32.603 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-00:08:32.603 : Received logon request
+20150827-00:08:32.604 : Responding to logon request
+20150827-00:13:59.029 : Created session
+20150827-00:14:58.017 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-00:14:58.017 : Received logon request
+20150827-00:14:58.017 : Responding to logon request
+20150827-17:48:39.564 : Created session
+20150827-18:02:04.038 : Created session
+20150827-18:05:02.422 : Created session
+20150827-18:06:02.448 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-18:06:02.449 : Received logon request
+20150827-18:06:02.449 : Responding to logon request
+20150827-18:33:20.408 : Created session
+20150827-18:33:20.488 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-18:33:20.488 : Received logon request
+20150827-18:33:20.488 : Responding to logon request
+20150827-18:33:50.728 : Created session
+20150827-18:33:50.808 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-18:33:50.808 : Received logon request
+20150827-18:33:50.808 : Responding to logon request
+20150827-18:46:44.035 : Created session
+20150827-18:46:44.115 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-18:46:44.115 : Received logon request
+20150827-18:46:44.115 : Responding to logon request
+20150827-18:53:49.579 : Created session
+20150827-18:56:25.251 : Created session
+20150827-18:57:25.241 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-18:57:25.241 : Received logon request
+20150827-18:57:25.242 : Responding to logon request
+20150827-19:03:27.052 : Created session
+20150827-19:03:48.074 : Created session
+20150827-19:03:48.155 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:03:48.155 : Received logon request
+20150827-19:03:48.155 : Responding to logon request
+20150827-19:05:05.583 : Created session
+20150827-19:05:05.662 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:05:05.663 : Received logon request
+20150827-19:05:05.663 : Responding to logon request
+20150827-19:06:06.466 : Created session
+20150827-19:06:06.545 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:06:06.545 : Received logon request
+20150827-19:06:06.546 : Responding to logon request
+20150827-19:08:25.430 : Created session
+20150827-19:08:25.510 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:08:25.510 : Received logon request
+20150827-19:08:25.510 : Responding to logon request
+20150827-19:08:56.044 : Created session
+20150827-19:08:56.125 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:08:56.125 : Received logon request
+20150827-19:08:56.125 : Responding to logon request
+20150827-19:09:45.018 : Created session
+20150827-19:09:45.098 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:09:45.098 : Received logon request
+20150827-19:09:45.098 : Responding to logon request
+20150827-19:10:21.942 : Created session
+20150827-19:10:22.022 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:10:22.022 : Received logon request
+20150827-19:10:22.022 : Responding to logon request
+20150827-19:11:19.818 : Created session
+20150827-19:11:19.898 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:11:19.898 : Received logon request
+20150827-19:11:19.899 : Responding to logon request
+20150827-19:25:35.948 : Created session
+20150827-19:25:36.029 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:25:36.029 : Received logon request
+20150827-19:25:36.029 : Responding to logon request
+20150827-19:26:21.692 : Created session
+20150827-19:26:21.771 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:26:21.772 : Received logon request
+20150827-19:26:21.772 : Responding to logon request
+20150827-19:26:44.261 : Created session
+20150827-19:26:44.341 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:26:44.341 : Received logon request
+20150827-19:26:44.341 : Responding to logon request
+20150827-19:30:20.834 : Created session
+20150827-19:30:20.915 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:30:20.915 : Received logon request
+20150827-19:30:20.915 : Responding to logon request
+20150827-19:44:57.518 : Created session
+20150827-19:44:57.600 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:44:57.600 : Received logon request
+20150827-19:44:57.600 : Responding to logon request
+20150827-19:45:41.976 : Created session
+20150827-19:45:42.056 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:45:42.056 : Received logon request
+20150827-19:45:42.056 : Responding to logon request
+20150827-19:46:21.508 : Created session
+20150827-19:46:21.587 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:46:21.588 : Received logon request
+20150827-19:46:21.588 : Responding to logon request
+20150827-19:48:12.661 : Created session
+20150827-19:48:12.740 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:48:12.741 : Received logon request
+20150827-19:48:12.741 : Responding to logon request
+20150827-19:56:17.263 : Created session
+20150827-19:56:17.343 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:56:17.343 : Received logon request
+20150827-19:56:17.343 : Responding to logon request
+20150827-19:57:34.055 : Created session
+20150827-19:57:34.135 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:57:34.135 : Received logon request
+20150827-19:57:34.135 : Responding to logon request
+20150827-19:58:11.618 : Created session
+20150827-19:58:11.699 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:58:11.700 : Received logon request
+20150827-19:58:11.700 : Responding to logon request
+20150827-19:58:44.837 : Created session
+20150827-19:58:44.918 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150827-19:58:44.918 : Received logon request
+20150827-19:58:44.918 : Responding to logon request

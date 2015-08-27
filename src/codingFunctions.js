@@ -3,11 +3,83 @@
 function Coder(){
   this.decodedTagRegexp = /^[1-9][0-9]*$/;
   this.codedTagRegexp = /^t[1-9][0-9]*$/;
+  //Struct name - header, tags, groups , trailer. TODO more?
+  //TODO support groups tag
+  this.structNames = ['header','tags','trailer'];
 }
 
 Coder.prototype.destroy = function(){
   this.decodedTagRegexp = null;
   this.codedTagRegexp = null;
+  this.structNames = null;
+};
+
+//Getters/Setters
+
+Coder.prototype.getDecodedTagRegexp = function(){
+  return this.decodedTagRegexp;
+};
+
+Coder.prototype.getCodedTagRegexp = function(){
+  return this.codedTagRegexp;
+};
+
+//Extern coding functions for creating FIX messages
+
+Coder.prototype.decodeFIXmessage = function(codedElement){
+  var decodedResult = {};
+  //TODO testing for missing properties, for example no tags property
+  //TODO support groups tag - forEach will not work because groups tag is different
+  try{
+    this.structNames.forEach(this.decodeFIXstruct.bind(this,codedElement,decodedResult));
+  }catch (err){
+    console.log('Error in decoding message - ',err);
+    return undefined;
+  }
+  return decodedResult;
+};
+
+Coder.prototype.codeFIXmessage = function(decodedElement){
+  var codedResult = {};
+  //TODO testing for missing properties, for example no tags property
+  //TODO support groups tag - forEach will not work because groups tag is different
+  try{
+    this.structNames.forEach(this.codeFIXstruct.bind(this,decodedElement,codedResult));
+  }catch (err){
+    console.log('Error in decoding message - ',err);
+    return undefined;
+  }
+  return codedResult;
+};
+
+//Intern coding functions
+
+Coder.prototype.codeFIXstruct = function(decodedElement,codedResult,structName){
+  if (this.structNames.indexOf(structName) === -1){
+    throw new Error(structName + ' is invalid struct name');
+  }
+  if (!decodedElement.hasOwnProperty(structName)){
+    return;
+  }
+  codedResult[structName] = {};
+  var invalidKey = this.codeObject(decodedElement[structName],codedResult[structName],this.decodedTagRegexp);
+  if (invalidKey !== null){
+    throw new Error('Coded ' + structName + ' tag ' + invalidKey + ' is not valid')
+  }
+};
+
+Coder.prototype.decodeFIXstruct = function(codedElement,decodedResult,structName){
+  if (this.structNames.indexOf(structName) === -1){
+    throw new Error(structName + ' is invalid struct name');
+  }
+  if (!codedElement.hasOwnProperty(structName)){
+    return;
+  }
+  decodedResult[structName] = {};
+  var invalidKey = this.decodeObject(codedElement[structName],decodedResult[structName],this.codedTagRegexp);
+  if (invalidKey !== null){
+    throw new Error('Decoded ' + structName + ' tag ' + invalidKey + ' is not valid')
+  }
 };
 
 Coder.prototype.decodeObject = function(nondecodedobj,decodedobj,regexp){

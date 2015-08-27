@@ -10,16 +10,16 @@ function execOnSuccess(msg){
   console.log('***',msg);
 }
 
+//creating fixAcceptor
+var acceptor = new fixAcceptor();
+//starting fixAcceptor
+acceptor.start(execOnSuccess);
 //creating soap server
 var server = new soapServer('/fixMiddleware','fix.wsdl');
 //starting soap server
 server.start(8000,execOnSuccess);
 //creating soap client
 var client = new soapClient('http://localhost:8000/fixMiddleware?wsdl');
-//creating fixAcceptor
-var acceptor = new fixAcceptor();
-//starting fixAcceptor
-acceptor.start(execOnSuccess);
 
 //describe
 //client.LogDescribe();
@@ -76,8 +76,10 @@ var order5 = {
 };
 
 //sending FIX msg
+acceptor.send(order)
 client.sendFixMsg(order5);
 setTimeout(function(){
-  acceptor.send(order)
+  //acceptor.send(order)
+  //acceptor.send(order)
   client.recieveFixMessages();
-},60000);
+},10000);

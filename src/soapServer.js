@@ -62,6 +62,7 @@ soapServer.prototype.destroy = function(){
   this.listeners = null;
   //TODO when allex this.messageQueue.destroy();
   this.messageQueue = null;
+  this.messageLimit = null;
   this.clearMessageQueueOnNextMsg = null;
 };
 
@@ -95,10 +96,12 @@ soapServer.prototype.onCreateListener = function(sessionID){
 
 soapServer.prototype.onLogonListener = function(sessionID){
   console.log('INITIATOR EVENT onLogon: got Session ID - ' + JSON.stringify(sessionID));
+  this.fixInitiator.setConnectionEstablished(true);
 };
 
 soapServer.prototype.onLogoutListener = function(sessionID){
   console.log('INITIATOR EVENT onLogout: got Session ID - ' + JSON.stringify(sessionID));
+  this.fixInitiator.setConnectionEstablished(false);
 };
 
 soapServer.prototype.onLogonAttemptListener = function(message,sessionID){
@@ -123,21 +126,9 @@ soapServer.prototype.fromAppListener = function(msg, sessionID){
     this.messageQueue.shift(); //TODO allex data struct prob doesnt have shift method but pop
     //TODO get missing messages from database/fs
   }
-  var codedMsg = {};
-  codedMsg.header = {};
-  var invalidKey = Coder.codeObject(msg.message.header,codedMsg.header,Coder.decodedTagRegexp);
-  if (invalidKey !== null){
-    throw new soapError('soap:Sender','rpc:InvalidHeaderTag','Decoded Header tag ' + invalidKey + ' is not valid')
-  }
-  codedMsg.tags = {};
-  invalidKey = Coder.codeObject(msg.message.tags,codedMsg.tags,Coder.decodedTagRegexp);
-  if (invalidKey !== null){
-    throw new soapError('soap:Sender','rpc:InvalidHeaderTag','Decoded Header tag ' + invalidKey + ' is not valid')
-  }
-  codedMsg.trailer = {};
-  invalidKey = Coder.codeObject(msg.message.trailer,codedMsg.trailer,Coder.decodedTagRegexp);
-  if (invalidKey !== null){
-    throw new soapError('soap:Sender','rpc:InvalidHeaderTag','Decoded Header tag ' + invalidKey + ' is not valid')
+  var codedMsg = Coder.codeFIXmessage(msg.message);
+  if (codedMsg === undefined){
+    throw new soapError('soap:Sender','rpc:InvalidHeaderTag','Decoded Header tag is not valid')
   }
   this.messageQueue.push(codedMsg);
 };
@@ -150,14 +141,17 @@ soapServer.prototype.echoCallback = function(msg){
 
 soapServer.prototype.sendFixMsg = function(msg,cb){
   var decodedMsg = this.decodeMsg(msg);
-  console.log('DEKODIRANA PORUKA',decodedMsg);
+  this.sendDecodedFixMsg(decodedMsg,cb);
+};
+
+soapServer.prototype.sendDecodedFixMsg = function(decodedMsg,cb){
   try{
     this.fixInitiator.send(decodedMsg); 
     cb({msg : 'Successfully sent!!!'});
   }catch(err){
     console.log('ERROR: ',err);
     console.log('Resending msg in 5sec...');
-    setTimeout(this.sendFixMsg.bind(this,decodedMsg,cb),5000);
+    setTimeout(this.sendDecodedFixMsg.bind(this,decodedMsg,cb),5000);
   }
 };
 
@@ -172,21 +166,10 @@ soapServer.prototype.decodeMsg = function(msg){
   if (!msg.hasOwnProperty('header')){
     throw new soapError('soap:Sender','rpc:InvalidMsgStructure','Message structure is not valid');
   }
-  var decodedMsg = {};
-  decodedMsg.header = {};
-  var invalidKey = Coder.decodeObject(msg.header,decodedMsg.header,Coder.codedTagRegexp);
-  if (invalidKey !== null){
-    throw new soapError('soap:Sender','rpc:InvalidHeaderTag','Coded Header tag ' + invalidKey + ' is not valid')
+  var decodedMsg = Coder.decodeFIXmessage(msg);
+  if (decodedMsg === undefined){
+    throw new Error('Error in decoding tags. Invalid tag.')
   }
-  if (!msg.hasOwnProperty('tags')){
-    return decodedMsg;
-  }
-  decodedMsg.tags = {};
-  invalidKey = Coder.decodeObject(msg.tags,decodedMsg.tags,Coder.codedTagRegexp);
-  if (invalidKey !== null){
-    throw new soapError('soap:Sender','rpc:InvalidHeaderTag','Coded Header tag ' + invalidKey + ' is not valid')
-  }
-  //TODO support groups tag
   return decodedMsg;
 };
 
