@@ -16,50 +16,35 @@ function inherits(target, source) {
 
 inherits(quickfixInitiator, events.EventEmitter)
 
-quickfixInitiator.prototype.onCreate = function(sessionID) {
-  this.emit('onCreate', { sessionID: sessionID });
-};
-
-quickfixInitiator.prototype.onLogon = function(sessionID) {
-  this.emit('onLogon', { sessionID: sessionID });
-};
-
-quickfixInitiator.prototype.onLogout = function(sessionID) {
-  this.emit('onLogout', { sessionID: sessionID });
-};
-
-quickfixInitiator.prototype.onLogonAttempt = function(message, sessionID) {
-  this.emit('onLogonAttempt', { message: message, sessionID: sessionID });
-};
-
-quickfixInitiator.prototype.toAdmin = function(message, sessionID) {
-  this.emit('toAdmin', { message: message, sessionID: sessionID });
-};
-
-quickfixInitiator.prototype.fromAdmin = function(message, sessionID) {
-  this.emit('fromAdmin', { message: message, sessionID: sessionID });
-};
-
-quickfixInitiator.prototype.fromApp = function(message, sessionID) {
-  this.emit('fromApp', { message: message, sessionID: sessionID });
-};
-
-var emitOptions = {
-  onCreate: quickfixInitiator.onLogout,
-  onLogon: quickfixInitiator.onLogon,
-  onLogout: quickfixInitiator.onLogout,
-  onLogonAttempt: quickfixInitiator.onLogonAttempt,
-  toAdmin: quickfixInitiator.toAdmin,
-  fromAdmin: quickfixInitiator.fromAdmin,
-  fromApp: quickfixInitiator.fromApp,
-};
-
 var options = {
   propertiesFile: path.join(__dirname,'initiatorProperties.properties')
 };
 
 function Initiator(){
-  this.quickfixInitiator = new quickfixInitiator(emitOptions,options);
+  var initiator = new quickfixInitiator({
+    onCreate: function(sessionID) {
+      initiator.emit('onCreate', { sessionID: sessionID });
+    },
+    onLogon: function(sessionID) {
+      initiator.emit('onLogon', { sessionID: sessionID });
+    },
+    onLogout: function(sessionID) {
+      initiator.emit('onLogout', { sessionID: sessionID });
+    },
+    onLogonAttempt: function(message, sessionID) {
+      initiator.emit('onLogonAttempt', { message: message, sessionID: sessionID });
+    },
+    toAdmin: function(message, sessionID) {
+      initiator.emit('toAdmin', { message: message, sessionID: sessionID });
+    },
+    fromAdmin: function(message, sessionID) {
+      initiator.emit('fromAdmin', { message: message, sessionID: sessionID });
+    },
+    fromApp: function(message, sessionID) {
+      initiator.emit('fromApp', { message: message, sessionID: sessionID });
+    }
+  },options);
+  this.quickfixInitiator = initiator;
   this.started = false;
 }
 
@@ -89,12 +74,14 @@ Initiator.prototype.send = function(msg){
 };
 
 Initiator.prototype.successfullySent = function(){
-  console.log('Message successfully sent!');
+  console.log('INITIATOR: Message successfully sent!');
 };
 
 Initiator.prototype.registerEventListeners = function(listeners){
   for (var eventName in listeners){
-    this.quickfixInitiator.on(eventName,listeners[eventName]);
+    if (listeners.hasOwnProperty(eventName)){
+      this.quickfixInitiator.on(eventName,listeners[eventName]);
+    }
   }
 };
 

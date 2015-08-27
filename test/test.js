@@ -68,13 +68,6 @@ describe('soapClient - method sendFixMsg', function(){
     }).should.throw('Provided argument MUST be an object');
   });
 
-  it('should throw if argument object does not have property header', function(){
-    (function(){
-      var sc = new soapClient('/greatUrl');
-      sc.sendFixMsg({notHeader : 'smth'});
-    }).should.throw('Argument object must have property header');
-  });
-
 });
 
 describe('soapServer - creating', function(){

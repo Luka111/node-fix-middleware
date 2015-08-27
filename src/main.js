@@ -22,21 +22,21 @@ var acceptor = new fixAcceptor();
 acceptor.start(execOnSuccess);
 
 //describe
-client.LogDescribe();
+//client.LogDescribe();
 //echo testing msg
-client.echo({'msg':'Startujem FIX!'});
+//client.echo({'msg':'Startujem FIX!'});
 
 //test FIX msg
 var order = {
   header: {
     8: 'FIX.4.4',
     35: 'D',
-    49: "NODEQUICKFIX",
-    56: "ELECTRONIFIE"
+    49: 'ELECTRONIFIE',
+    56: 'NODEQUICKFIX'
   },
   tags: {
-    11: "0E0Z86K00000",
-    48: "06051GDX4",
+    11: '0E0Z86K00000',
+    48: '06051GDX4',
     22: 1,
     38: 200,
     40: 2,
@@ -49,8 +49,35 @@ var order = {
 };
 
 var order1 = {
-  a : 2
+  header: {
+    nesto: 'FIX.4.4'
+  }
 }
 
+var order5 = {
+  header: {
+    t8: 'FIX.4.4',
+    t35: 'D',
+    t49: 'NODEQUICKFIX',
+    t56: 'ELECTRONIFIE'
+  },
+  tags: {
+    t11: '0E0Z86K00000',
+    t48: '06051GDX4',
+    t22: 1,
+    t38: 200,
+    t40: 2,
+    t54: 1,
+    t55: 'BAC',
+    t218: 100,
+    t60: df(new Date(), "yyyymmdd-HH:MM:ss.l"),
+    t423: 6
+  }
+};
+
 //sending FIX msg
-client.sendFixMsg(order);
+client.sendFixMsg(order5);
+setTimeout(function(){
+  acceptor.send(order)
+  client.recieveFixMessages();
+},60000);

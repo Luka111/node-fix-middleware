@@ -7,36 +7,112 @@
   xmlns:xs="http://www.w3.org/2001/XMLSchema"
   xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/">
 
+
+  <wsdl:types>
+    <xs:schema>
+
+      <xs:complexType name="fixHeader">
+         <xs:element name="8" type="xs:string"/>
+      </xs:complexType>
+
+      <xs:element name="echoReq">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="ereq" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="echoRes">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="eres" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="fixMessage">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="header" type="tns:fixHeader" minOccurs="1" maxOccurs="1"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="sendFixMsgRes">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="sfmres" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="fixError">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="fixerr" type="xs:string"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+      <xs:element name="fixMsgArray">
+        <xs:complexType>
+          <xs:sequence>
+            <xs:element name="fixMessageInArray" type="tns:fixHeader" minOccurs="0" maxOccurs="unbounded"/>
+          </xs:sequence>
+        </xs:complexType>
+      </xs:element>
+
+    </xs:schema>
+  </wsdl:types>
+
+
   <wsdl:message name="echoRequest">
-    <wsdl:part name="msg" type="xs:string"></wsdl:part>
+    <wsdl:part name="msg" element="tns:echoReq"></wsdl:part>
   </wsdl:message>
 
   <wsdl:message name="echoResponse">
-    <wsdl:part name="res" type="xs:string"></wsdl:part>
+    <wsdl:part name="res" element="tns:echoRes"></wsdl:part>
   </wsdl:message>
 
-  <wsdl:message name="sendFixMsgRequest">
-    <wsdl:part name="msg" type="xs:string"></wsdl:part>
+  <wsdl:message name="fixMsg">
+    <wsdl:part name="msg" element="tns:fixMessage"></wsdl:part>
   </wsdl:message>
 
   <wsdl:message name="sendFixMsgResponse">
-    <wsdl:part name="res" type="xs:string"></wsdl:part>
+    <wsdl:part name="res" element="tns:sendFixMsgRes"></wsdl:part>
   </wsdl:message>
+
+  <wsdl:message name="fixError">
+    <wsdl:part name="res" element="tns:fixError"></wsdl:part>
+  </wsdl:message>
+
+  <wsdl:message name="empty"/>
+
+  <wsdl:message name="fixMsgArray">
+    <wsdl:part name="res" element="tns:fixMsgArray"></wsdl:part>
+  </wsdl:message>
+
 
 
   <wsdl:portType name="execP">
     <wsdl:operation name="echo">
-      <wsdl:input message="echoRequest"></wsdl:input>
-      <wsdl:output message="echoResponse"></wsdl:output>
+      <wsdl:input message="tns:echoRequest"></wsdl:input>
+      <wsdl:output message="tns:echoResponse"></wsdl:output>
     </wsdl:operation>
     <wsdl:operation name="sendFixMsg">
-      <wsdl:input message="sendFixMsgRequest"></wsdl:input>
-      <wsdl:output message="sendFixMsgResponse"></wsdl:output>
+      <wsdl:input message="tns:fixMsg"></wsdl:input>
+      <wsdl:output message="tns:sendFixMsgResponse"></wsdl:output>
+      <wsdl:fault name="nmtoken" message="tns:fixError"></wsdl:fault>
+    </wsdl:operation>
+    <wsdl:operation name="recieveFixMessages">
+      <wsdl:input message="empty"></wsdl:input>
+      <wsdl:output message="tns:fixMsgArray"></wsdl:output>
     </wsdl:operation>
   </wsdl:portType>
 
-  <wsdl:binding name="execB" type="execP">
-    <soap:binding style="rpc" 
+  <wsdl:binding name="execB" type="tns:execP">
+    <soap:binding style="document" 
       transport="http://schemas.xmlsoap.org/soap/http"/>
 
     <wsdl:operation name="echo">
@@ -51,13 +127,35 @@
       </wsdl:output>
     </wsdl:operation>
 
+
     <wsdl:operation name="sendFixMsg">
       <soap:operation soapAction="sendFixMsg"/>
       <wsdl:input>
         <soap:body use="literal" 
         encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
       </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" 
+        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:output>
+      <wsdl:fault name="nmtoken">
+        <soap:body use="literal" 
+        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:fault>
     </wsdl:operation>
+
+    <wsdl:operation name="recieveFixMessages">
+      <soap:operation soapAction="sendFixMsg"/>
+      <wsdl:input>
+        <soap:body use="literal" 
+        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:input>
+      <wsdl:output>
+        <soap:body use="literal" 
+        encodingStyle="http://schemas.xmlsoap.org/soap/encoding/"/>
+      </wsdl:output>
+    </wsdl:operation>
+
 
   </wsdl:binding>
 
