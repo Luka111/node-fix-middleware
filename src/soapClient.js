@@ -86,17 +86,17 @@ soapClient.prototype.recieveFixMessagesHandler = function(err,result){
   if (!!err){
     throw err;
   }
-  var decodedResult;
+  var decodedResult = [];
   //TODO testing for all types
   if (result instanceof Array){
-    decodedResult = [];
     result.forEach(this.decodeArray.bind(this,decodedResult));
   }else{
     if (result instanceof Object){
-      decodedResult = Coder.decodeFIXmessage(result);
-      if (decodedResult === undefined){
+      var decodedElement = Coder.decodeFIXmessage(result);
+      if (decodedElement === undefined){
         throw new Error('Error in decoding tags. Invalid tag.')
       }
+      decodedResult.push(decodedElement);
     }
   }
   console.log('EVO DECODOVANE FIX PORUKE U NIZU',JSON.stringify(decodedResult));
