@@ -1320,3 +1320,48 @@
 20150827-22:59:38.651 : Initiated logon request
 20150827-22:59:38.652 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
 20150827-22:59:38.652 : Received logon response
+20150829-20:48:39.841 : Created session
+20150829-20:48:39.875 : Connecting to localhost on port 3223
+20150829-20:48:39.910 : Initiated logon request
+20150829-20:48:39.911 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150829-20:48:39.911 : Received logon response
+20150829-20:53:42.470 : Created session
+20150829-20:53:42.473 : Connecting to localhost on port 3223
+20150829-20:53:42.474 : Initiated logon request
+20150829-20:53:42.474 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150829-20:53:42.474 : Received logon response
+20150829-20:58:27.898 : Created session
+20150829-20:58:27.901 : Connecting to localhost on port 3223
+20150829-20:58:27.902 : Initiated logon request
+20150829-20:58:27.902 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150829-20:58:27.902 : Received logon response
+20150829-21:04:24.993 : Created session
+20150829-21:04:24.996 : Connecting to localhost on port 3223
+20150829-21:04:24.997 : Initiated logon request
+20150829-21:04:24.998 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150829-21:04:24.998 : Received logon response
+20150829-21:07:07.125 : Created session
+20150829-21:07:07.128 : Connecting to localhost on port 3223
+20150829-21:07:07.129 : Initiated logon request
+20150829-21:07:07.129 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150829-21:07:07.129 : Received logon response
+20150829-21:08:14.230 : Created session
+20150829-21:08:14.233 : Connecting to localhost on port 3223
+20150829-21:08:14.234 : Initiated logon request
+20150829-21:08:14.234 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150829-21:08:14.234 : Received logon response
+20150829-21:08:32.979 : Created session
+20150829-21:08:32.982 : Connecting to localhost on port 3223
+20150829-21:08:32.983 : Initiated logon request
+20150829-21:08:32.983 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150829-21:08:32.983 : Received logon response
+20150829-21:14:57.582 : Created session
+20150829-21:14:57.585 : Connecting to localhost on port 3223
+20150829-21:14:57.586 : Initiated logon request
+20150829-21:14:57.587 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150829-21:14:57.587 : Received logon response
+20150829-21:15:34.334 : Created session
+20150829-21:15:34.336 : Connecting to localhost on port 3223
+20150829-21:15:34.337 : Initiated logon request
+20150829-21:15:34.338 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150829-21:15:34.338 : Received logon response

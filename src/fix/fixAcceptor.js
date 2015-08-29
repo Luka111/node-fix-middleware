@@ -44,14 +44,7 @@ function Acceptor(){
     }
   }, options);
   this.quickfixAcceptor = acceptor;
-  this.listeners = new Listeners();
-  this.listeners.onCreate = this.onCreateListener.bind(this);
-  this.listeners.onLogon = this.onLogonListener.bind(this);
-  this.listeners.onLogout = this.onLogoutListener.bind(this);
-  this.listeners.onLogonAttempt = this.onLogonAttemptListener.bind(this);
-  this.listeners.toAdmin = this.toAdminListener.bind(this);
-  this.listeners.fromAdmin = this.fromAdminListener.bind(this);
-  this.listeners.fromApp = this.fromAppListener.bind(this);
+  this.listeners = new Listeners('ACCEPTOR');
   this.started = false;
 }
 
@@ -97,34 +90,6 @@ Acceptor.prototype.registerEventListeners = function(){
 
 Acceptor.prototype.registerListener = function(event){
   this.quickfixAcceptor.on(event, console.log.bind(null, event));
-};
-
-Acceptor.prototype.onCreateListener = function(sessionID){
-  console.log('ACCEPTOR EVENT onCreate: got Session ID - ' + JSON.stringify(sessionID));
-};
-
-Acceptor.prototype.onLogonListener = function(sessionID){
-  console.log('ACCEPTOR EVENT onLogon: got Session ID - ' + JSON.stringify(sessionID));
-};
-
-Acceptor.prototype.onLogoutListener = function(sessionID){
-  console.log('ACCEPTOR EVENT onLogout: got Session ID - ' + JSON.stringify(sessionID));
-};
-
-Acceptor.prototype.onLogonAttemptListener = function(message,sessionID){
-  console.log('ACCEPTOR EVENT onLogonAttempt: got message - ' + JSON.stringify(message) + ' .Session ID - ' + JSON.stringify(sessionID));
-};
-
-Acceptor.prototype.toAdminListener = function(message,sessionID){
-  console.log('ACCEPTOR EVENT toAdmin: got message - ' + JSON.stringify(message) + ' .Session ID - ' + JSON.stringify(sessionID));
-};
-
-Acceptor.prototype.fromAdminListener = function(message,sessionID){
-  console.log('ACCEPTOR EVENT fromAdmin: got message - ' + JSON.stringify(message) + ' .Session ID - ' + JSON.stringify(sessionID));
-};
-
-Acceptor.prototype.fromAppListener = function(message, sessionID){
-  console.log('ACCEPTOR EVENT fromApp: got app message - ' + JSON.stringify(message) + ' .Session ID - ' + JSON.stringify(sessionID));
 };
 
 module.exports = Acceptor;

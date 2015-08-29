@@ -40,14 +40,11 @@ function soapServer(path,fileName){
   this.wsdl = fs.readFileSync(fileName, 'utf8');
   this.soapServer = null;
   this.fixInitiator = null;
-  this.listeners = new Listeners();
-  this.listeners.onCreate = this.onCreateListener.bind(this);
-  this.listeners.onLogon = this.onLogonListener.bind(this);
-  this.listeners.onLogout = this.onLogoutListener.bind(this);
-  this.listeners.onLogonAttempt = this.onLogonAttemptListener.bind(this);
-  this.listeners.toAdmin = this.toAdminListener.bind(this);
-  this.listeners.fromAdmin = this.fromAdminListener.bind(this);
-  this.listeners.fromApp = this.fromAppListener.bind(this);
+  this.listeners = new Listeners('INITIATOR');
+  //add only overriden listeners
+  this.listeners.onLogon = this.onLogonListener.bind(this,'INITIATOR');
+  this.listeners.onLogout = this.onLogoutListener.bind(this,'INITIATOR');
+  this.listeners.fromApp = this.fromAppListener.bind(this,'INITIATOR');
   this.messageQueue = []; //TODO replace with allex
   this.messageLimit = 10000; //TODO check this limit
   this.clearMessageQueueOnNextMsg = false;
@@ -88,42 +85,26 @@ soapServer.prototype.start = function(port){
   this.soapServer.log = this.serverLogging.bind(this); 
 };
 
-//FIX event listeners
-
 soapServer.prototype.startFixInitiator = function(msg){
   this.fixInitiator = new fixInitiator(msg.settings);
   this.fixInitiator.start();
   this.fixInitiator.registerEventListeners(this.listeners);
 };
 
-soapServer.prototype.onCreateListener = function(sessionID){
-  console.log('INITIATOR EVENT onCreate: got Session ID - ' + JSON.stringify(sessionID));
-};
+//Overridden FIX listeners
 
-soapServer.prototype.onLogonListener = function(sessionID){
-  console.log('INITIATOR EVENT onLogon: got Session ID - ' + JSON.stringify(sessionID));
+soapServer.prototype.onLogonListener = function(emitter,sessionID){
+  this.listeners.onLogonListener(emitter,sessionID); //super
   this.fixInitiator.setConnectionEstablished(true);
 };
 
-soapServer.prototype.onLogoutListener = function(sessionID){
-  console.log('INITIATOR EVENT onLogout: got Session ID - ' + JSON.stringify(sessionID));
+soapServer.prototype.onLogoutListener = function(emitter,sessionID){
+  this.listeners.onLogoutListener(emitter,sessionID); //super
   this.fixInitiator.setConnectionEstablished(false);
 };
 
-soapServer.prototype.onLogonAttemptListener = function(message,sessionID){
-  console.log('INITIATOR EVENT onLogonAttempt: got message - ' + JSON.stringify(message) + ' .Session ID - ' + JSON.stringify(sessionID));
-};
-
-soapServer.prototype.toAdminListener = function(message,sessionID){
-  console.log('INITIATOR EVENT toAdmin: got message - ' + JSON.stringify(message) + ' .Session ID - ' + JSON.stringify(sessionID));
-};
-
-soapServer.prototype.fromAdminListener = function(message,sessionID){
-  console.log('INITIATOR EVENT fromAdmin: got message - ' + JSON.stringify(message) + ' .Session ID - ' + JSON.stringify(sessionID));
-};
-
-soapServer.prototype.fromAppListener = function(msg, sessionID){
-  console.log('INITIATOR EVENT fromApp: got app message - ' + JSON.stringify(msg) + ' .Session ID - ' + JSON.stringify(sessionID));
+soapServer.prototype.fromAppListener = function(emitter,msg,sessionID){
+  this.listeners.fromAppListener(emitter,msg,sessionID); //super
   if (!!this.clearMessageQueueOnNextMsg){
     this.messageQueue = []; //TODO when allex destroy
     this.clearMessageQueueOnNextMsg = false;
