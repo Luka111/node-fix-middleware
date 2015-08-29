@@ -89,6 +89,7 @@ soapServer.prototype.startFixInitiator = function(msg){
   this.fixInitiator = new fixInitiator(msg.settings);
   this.fixInitiator.start();
   this.fixInitiator.registerEventListeners(this.listeners);
+  return 'Fix initiator started';
 };
 
 //Overridden FIX listeners
