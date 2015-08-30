@@ -1,0 +1,5 @@
+20150830-11:32:19.477 : Created session
+20150830-11:32:19.480 : Connecting to localhost on port 3223
+20150830-11:32:19.481 : Initiated logon request
+20150830-11:32:19.482 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150830-11:32:19.482 : Received logon response
