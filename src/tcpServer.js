@@ -199,7 +199,7 @@ CredentialsHandler.prototype.readingFinished = function(){
 };
 
 CredentialsHandler.prototype.onSocketError = function () {
-  console.log('Credentials handler: Socket error!');
+  this.destroy();
 };
 
 CredentialsHandler.prototype.onSocketClosed = function () {
