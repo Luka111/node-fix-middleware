@@ -3,3 +3,13 @@
 20150830-11:32:19.481 : Initiated logon request
 20150830-11:32:19.482 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
 20150830-11:32:19.482 : Received logon response
+20150901-12:10:40.680 : Created session
+20150901-12:10:40.694 : Connecting to localhost on port 3223
+20150901-12:10:40.708 : Initiated logon request
+20150901-12:10:40.708 : Socket Error: Connection reset by peer.
+20150901-12:10:40.708 : Disconnecting
+20150901-12:30:56.514 : Created session
+20150901-12:30:56.517 : Connecting to localhost on port 3223
+20150901-12:30:56.518 : Initiated logon request
+20150901-12:30:56.518 : Socket Error: Connection reset by peer.
+20150901-12:30:56.518 : Disconnecting
