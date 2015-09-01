@@ -3,6 +3,7 @@
 var net = require('net');
 var fixInitiator = require('./fix/fixInitiator.js');
 var Listeners = require('./listeners.js');
+var crypto = require('crypto');
 
 function ServerMethods(){
   this.startFixInitiator = null;
@@ -56,10 +57,23 @@ tcpFixServer.checkCredentials = function(name, password){
   //TODO real DB checking
 };
 
+//TODO remove, just for testing
+tcpFixServer.validSecrets = [];
+
+tcpFixServer.checkSecret = function(secret){
+  if (tcpFixServer.validSecrets.indexOf(secret) !== -1){
+    return true;
+  }else{
+    return false;
+  }
+  //TODO real DB checking
+};
+
 tcpFixServer.generateSecret = function(){
-  var nestoOd16Bita = 'blabla';
   //TODO real secret generator
-  return nestoOd16Bita;
+  var rand16 = crypto.randomBytes(8).toString('hex');
+  tcpFixServer.validSecrets.push(rand16);
+  return rand16;
 };
 
 //Event listeners
@@ -113,7 +127,7 @@ function ConnectionHandler(socket, buffer) {
   this.socket = socket;
   this.cache = null; //will become buffer if necessery
   this.lastWrittenIndex = 0;
-  this.initialCacheSize = 1024;
+  this.initialCacheSize = 1024; //TODO test why doesnt work for 1
   this.onData(buffer);
 }
 
@@ -127,19 +141,29 @@ ConnectionHandler.prototype.destroy = function () {
 };
 
 ConnectionHandler.prototype.onSocketError = function () {
+  console.log('Handler:  Socket error!');
   this.destroy();
 };
 
 ConnectionHandler.prototype.onSocketClosed = function () {
+  console.log('Handler:  Socket closed!');
   this.destroy();
 };
 
+//template method
 ConnectionHandler.prototype.onData = function (buffer) {
-  throw Error('onData not implemented');
+  console.log('*** Recieved buffer :',buffer);
+  this.saveToCache(buffer);
+  for (var i=0; i<buffer.length; i++){
+    this.executeOnEveryByte(buffer,i);
+    var executed = this.executeIfReadingFinished(this.executeOnReadingFinished.bind(this,buffer));
+    if (!!executed) return;
+  }
 };
 
+//abstract
 ConnectionHandler.prototype.readingFinished = function(){
-  return true; //reading byte by byte
+  throw Error('readingFinished not implemented');
 };
 
 ConnectionHandler.prototype.executeIfReadingFinished = function(cb){
@@ -148,6 +172,16 @@ ConnectionHandler.prototype.executeIfReadingFinished = function(cb){
     return true;
   }
   return false;
+};
+
+//abstract
+ConnectionHandler.prototype.executeOnReadingFinished = function(){
+  throw Error('executeOnReadingFinished not implemented');
+};
+
+//abstract
+ConnectionHandler.prototype.executeOnEveryByte = function(){
+  throw Error('executeOnEveryByte not implemented');
 };
 
 ConnectionHandler.prototype.saveToCache = function(buffer){
@@ -190,7 +224,9 @@ CredentialsHandler.prototype.destroy = function(){
   this.password = null;
   this.name = null;
   this.zeroCnt = null;
-  this.socket.destroy();
+  if (!!this.socket){
+    this.socket.destroy();
+  }
   ConnectionHandler.prototype.destroy.call(this);
 };
 
@@ -198,49 +234,39 @@ CredentialsHandler.prototype.readingFinished = function(){
   return this.zeroCnt === 2; //reading until 2 zeros
 };
 
-CredentialsHandler.prototype.onSocketError = function () {
-  this.destroy();
-};
-
-CredentialsHandler.prototype.onSocketClosed = function () {
-  console.log('Credentials handler:  Socket closed!');
-};
-
-CredentialsHandler.prototype.onData = function(buffer) {
-  console.log('*************', buffer);
-  this.saveToCache(buffer);
-  console.log('*************', this.cache);
-  for (var i=0; i<buffer.length; i++){
-    if (buffer[i] === 0){
-      this.zeroCnt++;
-      //first zero - name
-      if (this.zeroCnt === 1){
-        this.name = this.cache.toString().substring(0,this.lastWrittenIndex - buffer.length + i);
-      }
-      if (this.zeroCnt === 2){
-        this.password = this.cache.toString().substring(this.name.length + 1,this.lastWrittenIndex - buffer.length + i);
-      }
-      var executed = this.executeIfReadingFinished(this.executeOnReadingFinished.bind(this));
-      if (!!executed) return;
+CredentialsHandler.prototype.executeOnEveryByte = function(buffer,i){
+  if (buffer[i] === 0){
+    this.zeroCnt++;
+    //first zero - name
+    if (this.zeroCnt === 1){
+      this.name = this.cache.toString().substring(0,this.lastWrittenIndex - buffer.length + i);
+    }
+    //second zero - password 
+    if (this.zeroCnt === 2){
+      this.password = this.cache.toString().substring(this.name.length + 1,this.lastWrittenIndex - buffer.length + i);
     }
   }
 };
 
-CredentialsHandler.prototype.executeOnReadingFinished = function(){
+CredentialsHandler.prototype.executeOnReadingFinished = function(buffer){
   if (tcpFixServer.checkCredentials(this.name,this.password)){
     var secret = tcpFixServer.generateSecret();
-    this.socket.write(secret);
+    this.socket.write('SECRET#' + secret);
   }else{
-    this.socket.write('Invalid username/password');
+    this.socket.write('Incorrect username/password!');
   }
-  this.destroy();
-  //TODO maybe check if there is anything after second zero, error?
+  var s = this.socket;
+  this.socket = null;
+  s.destroy();
+  //TODO maybe check if there is anything after second zero, error? - got buffer but not needed atm
 };
 
 //Session Handler - checking Secret (first 16 bytes) after 's'
 
 function SessionHandler(socket, buffer) {
-  console.log('new SessionHandler', arguments);
+  console.log('new SessionHandler');
+  this.secret = '';
+  this.bytesRead = 0;
   ConnectionHandler.call(this, socket, buffer);
 }
 
@@ -250,8 +276,53 @@ SessionHandler.prototype = Object.create(ConnectionHandler.prototype, {construct
   writable: false
 }});
 
-SessionHandler.prototype.onData = function(buffer) {
+SessionHandler.prototype.destroy = function(){
+  this.bytesRead = null;
+  this.secret = null;
 };
 
+SessionHandler.prototype.readingFinished = function(){
+  return this.bytesRead === 16;
+};
+
+SessionHandler.prototype.executeOnReadingFinished = function(buffer){
+  var bufferLeftover = buffer.slice(16);
+  var s = this.socket;
+  if (tcpFixServer.checkSecret(this.secret)){
+    console.log('++DOBAR SECRET!++');
+    this.socket.write('Correct secret, your request will be processed');
+    this.destroy();
+    new RequestHandler(s,bufferLeftover);
+  }else{
+    console.log('--LOS SECRET!--');
+    this.socket.write('Incorrect secret!');
+    this.socket.destroy();
+  }
+};
+
+SessionHandler.prototype.executeOnEveryByte = function(){
+  this.bytesRead++;
+  console.log('DO SAD JE PROCITANO',this.bytesRead,'bajta');
+  if (this.bytesRead === 16){
+    this.secret = this.cache.toString().substring(0,16);
+    console.log('PROCITANO 16 BAJTA, dobijen ovaj secret :',this.secret);
+  }
+};
+
+//Request Handler - parsing user request -> <operation name>0<param0>0<param1>0...<paramN>0
+
+function RequestHandler(socket, buffer) {
+  console.log('new Request handler');
+  ConnectionHandler.call(this, socket, buffer);
+}
+
+RequestHandler.prototype = Object.create(ConnectionHandler.prototype, {constructor:{
+  value: RequestHandler,
+  enumerable: false,
+  writable: false
+}});
+
+RequestHandler.prototype.destroy = function(){
+};
 
 module.exports = tcpFixServer;

@@ -37,4 +37,5 @@ function sendMessages(client, msgs){
   setTimeout(sendMessages.bind(null, client, msgs), 1000);
 }
 
-sendMessages(client, [msg0, msg4, msg4, msg4, msg0, msg1, msg3, msg1, msg4, msg3, msg4, msg2, msg0, msg1, msg2, msg3, msg4]);
+//sendMessages(client, [msg0, msg4, msg4, msg4, msg0, msg1, msg3, msg1, msg4, msg3, msg4, msg2, msg0, msg1, msg2, msg3, msg4]);
+sendMessages(client, [msg0, msg1, msg2, msg3, msg4]);
