@@ -375,6 +375,10 @@ RequestHandler.prototype.readingFinished = function(){
 RequestHandler.prototype.executeOnReadingFinished = function(buffer){
   console.log('FINISHED reading arguments for',this.operationName,'method. Calling it...');
   this.myTcpFixServer.methods[this.operationName].call(this.myTcpFixServer,this.reqArguments);
+  this.zeroCnt = 0;
+  this.requires = 1;
+  this.reqArguments = [];
+  this.operationName = '';
 };
 
 RequestHandler.prototype.executeOnEveryByte = function(buffer, i){
