@@ -118,6 +118,7 @@ RequestParser.prototype = Object.create(IdleParser.prototype, {constructor:{
 }});
 
 RequestParser.prototype.destroy = function(){
+  console.log('((((( REQUEST PARSER SE UBIJA )))))');
   if (!!this.byteWorker){
     this.byteWorker.destroy();
   }
@@ -260,6 +261,7 @@ FixMsgByteWorker.prototype = Object.create(ByteWorker.prototype, {constructor:{
 }});
 
 FixMsgByteWorker.prototype.destroy = function(){
+  console.log('((((( FixMsgByteWorker SE UBIJA )))))');
   this.fixTagsCnt = null;
   this.fixTags = null;
   this.zeroCnt = null
@@ -297,6 +299,7 @@ TagByteWorker.prototype = Object.create(ByteWorker.prototype, {constructor:{
 }});
 
 TagByteWorker.prototype.destroy = function(){
+  console.log('((((( TagByteWorker SE UBIJA )))))');
   ByteWorker.prototype.destroy.call(this);
 };
 
@@ -304,6 +307,10 @@ TagByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker){
   if (bufferItem === 0){
     if (parentByteWorker.zeroCnt === 0){
       parentByteWorker.tag = parser.bufferHandler.generateNextWord();
+      //TODO sanity check.. throw!
+      if (!FIXMessage.fixTagRegexp.test(parentByteWorker.tag)){
+        throw new Error('Invalid FIX message structure: tag value ' + parentByteWorker.tag + ' is incorrect');
+      }
       console.log('TagByteWorker zavrsio posao i napravio',parentByteWorker.tag,'predaje stafetu ValueByteWorker');
       parentByteWorker.byteWorker.destroy();
       parentByteWorker.byteWorker = new ValueByteWorker(); 
@@ -339,9 +346,15 @@ ValueByteWorker.prototype.destroy = function(){
 
 ValueByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker){
   if (bufferItem === 0){
-    //TODO sanity check.. throw!
     parentByteWorker.zeroCnt++;
+    //TODO sanity check.. throw!
     parentByteWorker.value = parser.bufferHandler.generateNextWord();
+    if (!parentByteWorker.value){
+      throw new Error('Invalid FIX message structure: Empty values are not allowed!');
+    }
+    if (!parentByteWorker.fixmsg[parentByteWorker.fixTags[parentByteWorker.fixTagsCnt]]){
+      throw new Error('Invalid FIX message structure: end of request expected, instead got tag/value - { ' + parentByteWorker.tag + ':' + parentByteWorker.value + ' } ');
+    }
     parentByteWorker.fixmsg[parentByteWorker.fixTags[parentByteWorker.fixTagsCnt]][parentByteWorker.tag] = parentByteWorker.value;
     console.log('ValueByteWorker zavrsio posao i napravio',parentByteWorker.value,'prepusta stefetu TagByteWorker');
     console.log('=== Takodje je napravio ovo =',parentByteWorker.fixmsg);
@@ -357,6 +370,8 @@ function FIXMessage(){
   this.tags = {};
   //TODO groups
 };
+
+FIXMessage.fixTagRegexp = /^[1-9][0-9]*$/;
 
 FIXMessage.prototype.destroy = function(){
   this.tags = null;

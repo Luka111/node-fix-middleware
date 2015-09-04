@@ -170,6 +170,7 @@ tcpFixServer.generateSecret = function(){
 };
 
 
+//Abstract Handler
 function ConnectionHandler(socket, buffer, myTcpFixServer, parser) {
   socket.removeAllListeners();
   socket.on('error', this.onSocketError.bind(this));
@@ -182,9 +183,8 @@ function ConnectionHandler(socket, buffer, myTcpFixServer, parser) {
   this.onData(buffer);
 }
 
-//Abstract Handler
-
 ConnectionHandler.prototype.destroy = function () {
+  console.log('((((( CONNECTION HANDLER SE UBIJA )))))');
   this.parser.destroy();
   this.parser = null;
   this.continueAfterExecute = null;
@@ -202,23 +202,72 @@ ConnectionHandler.prototype.onSocketClosed = function () {
   this.destroy();
 };
 
+ConnectionHandler.prototype.makeWriteBuffer = function(buffer,operation){
+  if (!operation.length){
+    throw new Error('operation is required!');
+  }
+  if (typeof operation !== 'string'){
+    throw new Error('operation must be string');
+  }
+  if (operation.length !== 1){
+    throw new Error('operation length is not 1');
+  }
+  var newBuffer = new Buffer(buffer.length + 2);
+  newBuffer[0] = operation.charCodeAt(0);
+  buffer.copy(newBuffer,1);
+  newBuffer[newBuffer.length - 1] = 0;
+  return newBuffer;
+};
+
+ConnectionHandler.prototype.socketWriteError = function(msg){
+  if (!msg){
+    throw new Error('socketWriteError: must write something!');
+  }
+  if (!Buffer.isBuffer(msg)){
+    throw new Error('socketWriteError accepts buffer as argument');
+  }
+  this.socket.write(this.makeWriteBuffer(msg,'e'));
+};
+
+ConnectionHandler.prototype.socketWriteResult = function(msg){
+  if (!msg){
+    throw new Error('socketWriteError: must write something!');
+  }
+  if (!Buffer.isBuffer(msg)){
+    throw new Error('socketWriteResult accepts buffer as argument');
+  }
+  this.socket.write(this.makeWriteBuffer(msg,'r'));
+};
+
+ConnectionHandler.prototype.socketWriteNotification = function(msg){
+  if (!msg){
+    throw new Error('socketWriteError: must write something!');
+  }
+  if (!Buffer.isBuffer(msg)){
+    throw new Error('socketWriteNotification accepts buffer as argument');
+  }
+  this.socket.write(this.makeWriteBuffer(msg,'n'));
+};
+
 //template method
 ConnectionHandler.prototype.onData = function (buffer) {
+  if (!this.socket) return;
   console.log('*** Recieved buffer :',buffer.toString());
-  for (var i=0; i<buffer.length; i++){
-    //TODO remove comments, SHOULD catch
-    //try{
+  try{
+    for (var i=0; i<buffer.length; i++){
       this.parser.executeByte(buffer[i]);
-    //}catch (err){
-      //console.log('ERROR in parsing bytes: ',err);
-      //var s = this.socket;
-      //this.socket = null;
-      //s.destroy();
-    //}
-    var executed = this.executeIfReadingFinished(this.executeOnReadingFinished.bind(this,buffer));
-    if (!!executed && !this.continueAfterExecute){
-      return;
+      var executed = this.executeIfReadingFinished(this.executeOnReadingFinished.bind(this,buffer));
+      if (!!executed && !this.continueAfterExecute){
+        return;
+      }
     }
+  }catch (err){
+    console.log('ERROR: ',err);
+    var s = this.socket;
+    this.socket = null;
+    s.end(err.toString());
+    s.destroy();
+    return;
   }
 };
 
@@ -269,12 +318,9 @@ CredentialsHandler.prototype.readingFinished = function(){
 CredentialsHandler.prototype.executeOnReadingFinished = function(buffer){
   if (tcpFixServer.checkCredentials(this.parser.getName(),this.parser.getPassword())){
     var secret = tcpFixServer.generateSecret();
-    var secretBuffer = new Buffer(17);
-    secretBuffer[0] = 0;
-    secret.copy(secretBuffer,1);
-    this.socket.write(secretBuffer);
+    this.socketWriteResult(secret);
   }else{
-    this.socket.write('Incorrect username/password!');
+    this.socketWriteError(new Buffer('Incorrect username/password!'));
   }
   var s = this.socket;
   this.socket = null;
@@ -311,14 +357,16 @@ SessionHandler.prototype.executeOnReadingFinished = function(buffer){
   var s = this.socket;
   if (tcpFixServer.checkSecret(this.parser.getSecret())){
     console.log('++DOBAR SECRET!++');
-    this.socket.write('Correct secret, your request will be processed');
+    this.socketWriteNotification(new Buffer('Correct secret, your request will be processed'));
     var myTcpFixServer = this.myTcpFixServer;
     this.destroy();
     new RequestHandler(s,bufferLeftover,myTcpFixServer);
   }else{
     console.log('--LOS SECRET!--');
-    this.socket.write('Incorrect secret!');
-    this.socket.destroy();
+    this.socketWriteError(new Buffer('Incorrect secret!'));
+    var s = this.socket;
+    this.socket = null;
+    s.destroy();
   }
 };
 

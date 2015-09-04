@@ -101,8 +101,8 @@ tcpClient.prototype.onClose = function(){
 
 tcpClient.prototype.onData = function(buffer){
   console.log('Recieved data from server - ' + buffer);
-  if (buffer[0] === 0){
-    var secret = buffer.slice(1);
+  if (buffer[0] === 114){
+    var secret = buffer.slice(1,17);
     console.log('Dobio sam ovaj secret',secret,'i njegova duzina je',secret.length);
     this.secret = secret;
     this.client = net.createConnection(this.options,this.secretConnectionHandler.bind(this));
