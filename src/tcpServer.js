@@ -265,7 +265,8 @@ ConnectionHandler.prototype.onData = function (buffer) {
     console.log('ERROR: ',err);
     var s = this.socket;
     this.socket = null;
-    s.end(err.toString());
+    s.socketWriteError(new Buffer(err.toString()));
+    s.end();
     s.destroy();
     return;
   }
@@ -304,6 +305,7 @@ CredentialsHandler.prototype = Object.create(ConnectionHandler.prototype, {const
 }});
 
 CredentialsHandler.prototype.destroy = function(){
+  console.log('((((( CREDENTIALS HANDLER SE UBIJA )))))');
   this.continueAfterExecute = null;
   if (!!this.socket){
     this.socket.destroy();

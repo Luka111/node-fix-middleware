@@ -5,6 +5,27 @@ var df = require('dateformat');
 
 var settings = '[DEFAULT]\nReconnectInterval=60\nPersistMessages=Y\nFileStorePath=../data\nFileLogPath=../log\n\n[SESSION]\nConnectionType=initiator\nSenderCompID=NODEQUICKFIX\nTargetCompID=ELECTRONIFIE\nBeginString=FIX.4.4\nStartTime=00:00:00\nEndTime=23:59:59\nHeartBtInt=30\nSocketConnectPort=3223\nSocketConnectHost=localhost\nUseDataDictionary=Y\nDataDictionary=../node_modules/node-quickfix/quickfix/spec/FIX44.xml\nResetOnLogon=Y';
 
+var order = {
+  header: {
+    8: 'FIX.4.4',
+    35: 'D',
+    49: 'ELECTRONIFIE',
+    56: 'NODEQUICKFIX'
+  },
+  tags: {
+    11: '0E0Z86K00000',
+    48: '06051GDX4',
+    22: 1,
+    38: 200,
+    40: 2,
+    54: 1,
+    55: 'BAC',
+    218: 100,
+    60: df(new Date(), "yyyymmdd-HH:MM:ss.l"),
+    423: 6
+  }
+};
+
 function tcpClient(options){
   this.options = options;
   this.secret = null;
@@ -24,9 +45,81 @@ tcpClient.prototype.destroy = function(){
 
 //Intern methods
 
-tcpClient.prototype.send = function(msg){
-  console.log('writing', msg);
-  this.client.write(msg);
+tcpClient.prototype.generateZeroDelimitedTagValue = function(obj){
+  var res = '';
+  if (!obj){
+    return res;
+  }
+  if (typeof obj !== 'object'){
+    return res;
+  }
+  for (var key in obj){
+    if (obj.hasOwnProperty(key)){
+      res += (key + String.fromCharCode(0) + obj[key] + String.fromCharCode(0));
+    }
+  }
+  res += String.fromCharCode(0);
+  return res;
+};
+
+//Public methods
+
+tcpClient.prototype.sendCredentials = function(name, password){
+  if (!name){
+    throw new Error( 'sendCredentials: name param is required!');
+  }
+  if (typeof name !== 'string'){
+    throw new Error( 'sendCredentials: name param must be string!');
+  }
+  if (!password){
+    throw new Error( 'sendCredentials: password param is required!');
+  }
+  if (typeof password!== 'string'){
+    throw new Error( 'sendCredentials: password param must be string!');
+  }
+  var credentialsMsg = 'c' + name + String.fromCharCode(0) + password + String.fromCharCode(0);
+  console.log('writing', credentialsMsg);
+  this.client.write(credentialsMsg);
+};
+
+tcpClient.prototype.sendSecret = function(){
+  if (!this.secret){
+    throw new Error('sendSecret: There is no secret recieved!');
+  }
+  var secret = new Buffer(17);
+  secret[0] = 115; //ascii - s for secret
+  this.secret.copy(secret,1);
+  this.client.write(secret);
+};
+
+tcpClient.prototype.sendFIXInitiatorSettings = function(settings){
+  if (!settings){
+    throw new Error('sendFIXInitiatorSettings: settings param is required');
+  }
+  if (typeof settings !== 'string'){
+    throw new Error('sendFIXInitiatorSettings: settings param type must be string');
+  }
+  var settingsMsg = 'startFixInitiator' + String.fromCharCode(0) + settings + String.fromCharCode(0);
+  this.client.write(settingsMsg);
+};
+
+tcpClient.prototype.sendFIXMessage = function(fixMsg){
+  if (!fixMsg){
+    throw new Error('sendFixMsg: fixMsg param is required');
+  };
+  if (typeof fixMsg !== 'object'){
+    throw new Error('sendFIXMessage: fixMsg param type must be object');
+  }
+  if (!fixMsg.hasOwnProperty('header')){
+    throw new Error('sendFIXMessage: fixMsg param must contain property header');
+  }
+  var header = this.generateZeroDelimitedTagValue(fixMsg.header);
+  var tags = '';
+  if (fixMsg.hasOwnProperty('tags')){
+    tags = this.generateZeroDelimitedTagValue(fixMsg.tags);
+  }
+  var fixMsg = 'sendFixMsg' + String.fromCharCode(0) + header + tags + String.fromCharCode(0);
+  this.client.write(fixMsg);
 };
 
 //Event listeners
@@ -39,24 +132,6 @@ tcpClient.prototype.connectionHandler = function(){
   this.client.on('data', this.onData.bind(this));
 };
 
-tcpClient.prototype.fillMessages = function(){
-  var st = 's' +  this.secret;
-  for (var i=0; i<st.length; i++){
-    this.messages.push(st[i]);
-  }
-  this.messages.push('blablabla');
-};
-
-tcpClient.prototype.sendMessagesInIntervals = function(){
-  if (this.messages.length < 1){
-    return;
-  }
-  this.send(this.messages.shift());
-  setTimeout(this.sendMessagesInIntervals.bind(this), 500);
-};
-
-var fixMsg = 'sendFixMsg' + String.fromCharCode(0) + '8#FIX.4.4#35#D#49#NODEQUICKFIX#56#ELECTRONIFIE##11#0E0Z86K00000#48#06051GDX4#22#1#38#200#40#2#54#1#55#BAC#218#100#60#'+df(new Date(), "yyyymmdd-HH:MM:ss.l")+'#423#6##'+ String.fromCharCode(0);
-
 //TODO inherit..
 tcpClient.prototype.secretConnectionHandler = function(){
   console.log('Secret Connected to the server!');
@@ -65,38 +140,19 @@ tcpClient.prototype.secretConnectionHandler = function(){
   this.client.on('close', this.onClose.bind(this));
   this.client.on('data', this.onData.bind(this));
   //TODO remove, just for testing 
-  var secret = new Buffer(17);
-  secret[0] = 115;
-  this.secret.copy(secret,1);
-  this.send(secret);
-  var settingsMsg = 'startFixInitiator' + String.fromCharCode(0) + settings + String.fromCharCode(0);
-  this.send(settingsMsg);
-  var header = this.generateZeroDelimitedTagValue(['8','FIX.4.4','35','D','49','NODEQUICKFIX','56','ELECTRONIFIE']);
-  var tags = this.generateZeroDelimitedTagValue(['11','0E0Z86K00000','48','06051GDX4','22','1','38','200','40','2','54','1','55','BAC','218','100','60',''+df(new Date(), "yyyymmdd-HH:MM:ss.l"),'423','6']);
-  var fixMsg = 'sendFixMsg' + String.fromCharCode(0) + header + tags + String.fromCharCode(0);
-  console.log('?!?! STA JE FIXMSG ?!?!?',fixMsg);
-  this.send(fixMsg);
-  //this.fillMessages();
-  //this.sendMessagesInIntervals();
-};
-
-tcpClient.prototype.generateZeroDelimitedTagValue = function(args){
-  var res = '';
-  for (var i=0; i<args.length; i++){
-    res += (args[i] + String.fromCharCode(0));
-  }
-  res += String.fromCharCode(0);
-  return res;
+  this.sendSecret();
+  this.sendFIXInitiatorSettings(settings);
+  this.sendFIXMessage(order);
 };
 
 tcpClient.prototype.onError = function(){
   console.log('Client Error!');
-  this.client = net.createConnection(this.options,this.connectionHandler.bind(this));
-  this.client.on('error',console.log.bind(null,'Error connecting to the server!'));
 };
 
 tcpClient.prototype.onClose = function(){
   console.log('Client Socket closed.');
+  this.client = net.createConnection(this.options,this.connectionHandler.bind(this));
+  this.client.on('error',console.log.bind(null,'Error connecting to the server!'));
 };
 
 tcpClient.prototype.onData = function(buffer){
@@ -107,10 +163,6 @@ tcpClient.prototype.onData = function(buffer){
     this.secret = secret;
     this.client = net.createConnection(this.options,this.secretConnectionHandler.bind(this));
   }
-};
-
-tcpClient.prototype.registerEventListener = function(eventName, cb){
-  this.client.on(eventName, cb);
 };
 
 module.exports = tcpClient;
