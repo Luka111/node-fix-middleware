@@ -718,3 +718,38 @@
 20150905-23:28:22.253 : Initiated logon request
 20150905-23:28:22.254 : Socket Error: Connection reset by peer.
 20150905-23:28:22.254 : Disconnecting
+20150906-11:31:20.337 : Created session
+20150906-11:31:20.360 : Connecting to localhost on port 3223
+20150906-11:31:20.371 : Initiated logon request
+20150906-11:31:20.371 : Socket Error: Connection reset by peer.
+20150906-11:31:20.371 : Disconnecting
+20150906-20:19:36.952 : Created session
+20150906-20:19:36.954 : Connecting to localhost on port 3223
+20150906-20:19:36.955 : Initiated logon request
+20150906-20:19:36.955 : Socket Error: Connection reset by peer.
+20150906-20:19:36.955 : Disconnecting
+20150906-20:21:59.040 : Created session
+20150906-20:21:59.043 : Connecting to localhost on port 3223
+20150906-20:21:59.044 : Initiated logon request
+20150906-20:21:59.044 : Socket Error: Connection reset by peer.
+20150906-20:21:59.044 : Disconnecting
+20150906-20:25:56.382 : Created session
+20150906-20:25:56.385 : Connecting to localhost on port 3223
+20150906-20:25:56.386 : Initiated logon request
+20150906-20:25:56.386 : Socket Error: Connection reset by peer.
+20150906-20:25:56.386 : Disconnecting
+20150906-20:27:55.105 : Created session
+20150906-20:27:55.108 : Connecting to localhost on port 3223
+20150906-20:27:55.109 : Initiated logon request
+20150906-20:27:55.109 : Socket Error: Connection reset by peer.
+20150906-20:27:55.109 : Disconnecting
+20150906-20:29:16.594 : Created session
+20150906-20:29:16.597 : Connecting to localhost on port 3223
+20150906-20:29:16.598 : Initiated logon request
+20150906-20:29:16.598 : Socket Error: Connection reset by peer.
+20150906-20:29:16.598 : Disconnecting
+20150906-21:41:19.118 : Created session
+20150906-21:41:19.121 : Connecting to localhost on port 3223
+20150906-21:41:19.121 : Initiated logon request
+20150906-21:41:19.121 : Socket Error: Connection reset by peer.
+20150906-21:41:19.121 : Disconnecting

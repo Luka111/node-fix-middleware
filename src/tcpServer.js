@@ -55,16 +55,20 @@ tcpFixServer.prototype.startFixInitiator = function(args){
   if (!(args instanceof Array)){
     throw 'startFixInitiator accepts array of params';
   }
-  if (args.length !== 1){
-    throw 'startFixInitiator requires exactly 1 param';
+  if (args.length !== 2){
+    throw 'startFixInitiator requires exactly 2 params - cb and settings';
   }
-  var settings = args[0];
+  var cb = args[0];
+  if (typeof cb !== 'function'){
+    throw 'startFixInitiator requires function as the first param!';
+  }
+  var settings = args[1];
   if (typeof settings !== 'string'){
-    throw 'startFixInitiator requires string as the first param!';
+    throw 'startFixInitiator requires string as the second param!';
   }
   //TODO ovde mora ozbiljan sanity check za ovaj string, jer quickfix puca ako se da los settings string
   this.fixInitiator = new fixInitiator(settings);
-  this.fixInitiator.start();
+  this.fixInitiator.start(cb);
   this.fixInitiator.registerEventListeners(this.listeners);
 };
 
@@ -253,7 +257,7 @@ ConnectionHandler.prototype.socketWriteNotification = function(msg){
 ConnectionHandler.prototype.onData = function (buffer) {
   if (!this.socket) return;
   console.log('*** Recieved buffer :',buffer.toString());
-  try{
+  //try{
     for (var i=0; i<buffer.length; i++){
       this.parser.executeByte(buffer[i]);
       var executed = this.executeIfReadingFinished(this.executeOnReadingFinished.bind(this,buffer));
@@ -261,15 +265,15 @@ ConnectionHandler.prototype.onData = function (buffer) {
         return;
       }
     }
-  }catch (err){
-    console.log('ERROR: ',err);
-    var s = this.socket;
-    this.socket = null;
-    s.socketWriteError(new Buffer(err.toString()));
-    s.end();
-    s.destroy();
-    return;
-  }
+  //}catch (err){
+    //console.log('ERROR: ',err);
+    //var s = this.socket;
+    //this.socket = null;
+    //s.socketWriteError(new Buffer(err.toString()));
+    //s.end();
+    //s.destroy();
+    //return;
+  //}
 };
 
 //abstract
@@ -359,7 +363,7 @@ SessionHandler.prototype.executeOnReadingFinished = function(buffer){
   var s = this.socket;
   if (tcpFixServer.checkSecret(this.parser.getSecret())){
     console.log('++DOBAR SECRET!++');
-    this.socketWriteNotification(new Buffer('Correct secret, your request will be processed'));
+    this.socketWriteResult(new Buffer('correct_secret'));
     var myTcpFixServer = this.myTcpFixServer;
     this.destroy();
     new RequestHandler(s,bufferLeftover,myTcpFixServer);
@@ -376,7 +380,7 @@ SessionHandler.prototype.executeOnReadingFinished = function(buffer){
 
 function RequestHandler(socket, buffer, myTcpFixServer) {
   console.log('new Request handler');
-  ConnectionHandler.call(this, socket, buffer, myTcpFixServer, new Parsers.RequestParser(myTcpFixServer.methods));
+  ConnectionHandler.call(this, socket, buffer, myTcpFixServer, new Parsers.RequestParser(myTcpFixServer.methods,this));
 }
 
 RequestHandler.prototype = Object.create(ConnectionHandler.prototype, {constructor:{

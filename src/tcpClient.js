@@ -3,68 +3,289 @@
 var net = require('net');
 var df = require('dateformat');
 
-var settings = '[DEFAULT]\nReconnectInterval=60\nPersistMessages=Y\nFileStorePath=../data\nFileLogPath=../log\n\n[SESSION]\nConnectionType=initiator\nSenderCompID=NODEQUICKFIX\nTargetCompID=ELECTRONIFIE\nBeginString=FIX.4.4\nStartTime=00:00:00\nEndTime=23:59:59\nHeartBtInt=30\nSocketConnectPort=3223\nSocketConnectHost=localhost\nUseDataDictionary=Y\nDataDictionary=../node_modules/node-quickfix/quickfix/spec/FIX44.xml\nResetOnLogon=Y';
+function ClientEvents(){
+  this.reset();
+}
 
-var order = {
-  header: {
-    8: 'FIX.4.4',
-    35: 'D',
-    49: 'ELECTRONIFIE',
-    56: 'NODEQUICKFIX'
-  },
-  tags: {
-    11: '0E0Z86K00000',
-    48: '06051GDX4',
-    22: 1,
-    38: 200,
-    40: 2,
-    54: 1,
-    55: 'BAC',
-    218: 100,
-    60: df(new Date(), "yyyymmdd-HH:MM:ss.l"),
-    423: 6
+ClientEvents.prototype.destroy = function(){
+  this.plainConnection = null;
+  this.secretConnection = null;
+  this.fixInitiatorStarted = null;
+}
+
+ClientEvents.prototype.reset = function(){
+  this.plainConnection = [];
+  this.secretConnection = [];
+  this.fixInitiatorStarted = [];
+}
+
+ClientEvents.prototype.addEventsToSocket = function(socket){
+  for (var event in this){
+    if (this.hasOwnProperty(event)){
+      for (var i=0; i<this[event].length; i++){
+        socket.on(event,this[event][i]);
+      }
+    }
+  }
+  this.reset();
+};
+
+ClientEvents.prototype.recieveEventsFromSocket = function(socket){
+  for (var event in this){
+    if (this.hasOwnProperty(event)){
+      this[event] = socket.listeners(event);
+    }
   }
 };
 
+//tcp Client
+
 function tcpClient(options){
-  this.options = options;
-  this.secret = null;
-  this.client = net.createConnection(options,this.connectionHandler.bind(this));
+  this.events = new ClientEvents();
+  this.connectionHandler = null;
+  new PlainConnectionHandler(options,this);
   //TODO remove, testing
-  this.messages = [];
 }
 
 tcpClient.prototype.destroy = function(){
+  if (!!this.connectionHandler){
+    this.connectionHandler.destroy();
+  }
+  this.connectionHandler = null;
+  this.events.destroy();
+  this.events = null;
   //TODO remove, testing
-  this.messages = null;
-  this.secret = null;
+};
+
+//Wrapper around connectionHandler executor 
+
+tcpClient.prototype.executeCbOnEvent = function(eventName, cb){
+  this.connectionHandler.registerCbOnEvent(eventName,cb.bind(this));
+};
+
+tcpClient.prototype.sendCredentials = function(name,password){
+  this.connectionHandler.sendCredentials(name,password);
+};
+
+tcpClient.prototype.sendFIXInitiatorSettings = function(settings){
+  this.connectionHandler.sendFIXInitiatorSettings(settings);
+};
+
+tcpClient.prototype.sendFIXMessage = function(msg){
+  this.connectionHandler.sendFIXMessage(msg);
+};
+
+//Connection Handler - Abstract
+
+function ConnectionHandler(options,myTcpClient){
+  this.client = net.createConnection(options,this.onConnect.bind(this));
+  this.client.on('error',this.onError.bind(this));
+  this.client.on('close',this.onClose.bind(this));
+  this.client.on('data',this.onData.bind(this));
+  this.myTcpClient = myTcpClient;
+  console.log('STA JE OVO',this.myTcpClient.events);
+  this.myTcpClient.events.addEventsToSocket(this.client);
+  this.executor = null;
+  this.myTcpClient.connectionHandler = this;
+  this.options = options;
+}
+
+ConnectionHandler.prototype.destroy = function(){
   this.options = null;
-  if (!!this.client) this.client.destroy();
+  if (!!this.executor){
+    this.executor.destroy();
+  }
+  this.executor = null;
+  this.myTcpClient = null;
+  if (!!this.client){
+    this.client.destroy();
+  }
   this.client = null;
 };
 
-//Intern methods
+//Wrapper around executor
 
-tcpClient.prototype.generateZeroDelimitedTagValue = function(obj){
-  var res = '';
-  if (!obj){
-    return res;
-  }
-  if (typeof obj !== 'object'){
-    return res;
-  }
-  for (var key in obj){
-    if (obj.hasOwnProperty(key)){
-      res += (key + String.fromCharCode(0) + obj[key] + String.fromCharCode(0));
-    }
-  }
-  res += String.fromCharCode(0);
-  return res;
+ConnectionHandler.prototype.registerCbOnEvent = function(eventName, cb){
+  console.log('Registrovao na ovaj event',eventName,'ovaj cb',cb);
+  this.client.on(eventName,cb);
 };
 
-//Public methods
+ConnectionHandler.prototype.sendCredentials = function(name,password){
+  if (!this.executor){
+    throw new Error('No executor instantiated!');
+  }
+  this.executor.sendCredentials(name,password);
+};
 
-tcpClient.prototype.sendCredentials = function(name, password){
+ConnectionHandler.prototype.sendFIXInitiatorSettings = function(settings){
+  if (!this.executor){
+    throw new Error('No executor instantiated!');
+  }
+  this.executor.sendFIXInitiatorSettings(settings);
+};
+
+ConnectionHandler.prototype.sendFIXMessage = function(msg){
+  if (!this.executor){
+    throw new Error('No executor instantiated!');
+  }
+  this.executor.sendFIXMessage(msg);
+};
+
+//Event Listeners
+
+ConnectionHandler.prototype.onConnect = function(){
+  console.log('CLIENT: Connected to the server!');
+};
+
+ConnectionHandler.prototype.onError = function(){
+  console.log('CLIENT: Socket error. Default behavior: Destroying...');
+  this.destroy();
+};
+
+ConnectionHandler.prototype.onClose = function(){
+  console.log('CLIENT: Socket closed. Default behavior: Destroying...');
+  this.destroy();
+};
+
+ConnectionHandler.prototype.onData = function(){
+  throw new Error('onData not implemented!');
+};
+
+//PlainConnectionHandler
+
+function PlainConnectionHandler(options,myTcpClient){
+  ConnectionHandler.call(this,options,myTcpClient);
+}
+
+PlainConnectionHandler.prototype = Object.create(ConnectionHandler.prototype, {constructor:{
+  value: PlainConnectionHandler,
+  enumerable: false,
+  writable: false
+}});
+
+PlainConnectionHandler.prototype.destroy = function(){
+  ConnectionHandler.prototype.destroy.call(this);
+};
+
+PlainConnectionHandler.prototype.onConnect = function(){
+  ConnectionHandler.prototype.onConnect.call(this);
+  if (!!this.executor){
+    this.executor.destroy();
+  }
+  this.executor = new CredentialsExecutor(this.client);
+  this.client.emit('plainConnection');
+};
+
+PlainConnectionHandler.prototype.onData = function(buffer){
+  if (buffer[0] === 114){ //if r (result) we expect secret
+    var secret = buffer.slice(1,17);
+    console.log('Dobio sam ovaj secret',secret,'i njegova duzina je',secret.length);
+    var myTcpClient = this.myTcpClient;
+    var options = this.options;
+    var client = this.client;
+    myTcpClient.events.recieveEventsFromSocket(client);
+    client.destroy();
+    this.client = null;
+    new SecretConnectionHandler(options,myTcpClient,secret);
+  }
+};
+
+//SecretConnectionHandler
+
+function SecretConnectionHandler(options,myTcpClient,secret){
+  this.secret = secret;
+  ConnectionHandler.call(this,options,myTcpClient);
+};
+
+SecretConnectionHandler.prototype = Object.create(ConnectionHandler.prototype, {constructor:{
+  value: SecretConnectionHandler,
+  enumerable: false,
+  writable: false
+}});
+
+SecretConnectionHandler.prototype.destroy = function(){
+  this.secret = null;
+  ConnectionHandler.prototype.destroy.call(this);
+};
+
+SecretConnectionHandler.prototype.onConnect = function(){
+  ConnectionHandler.prototype.onConnect.call(this);
+  if (!!this.executor){
+    this.executor.destroy();
+  }
+  this.executor = new SecretExecutor(this.client,this.secret);
+};
+
+SecretConnectionHandler.prototype.onData = function(buffer){
+  var opType = buffer[0];
+  var msg = buffer.slice(1,buffer.length - 1).toString(); //this removes 0 at the end, TODO add reading in chunks
+  if (opType === 114){ //r = result
+    if (msg === 'correct_secret'){
+      if (!!this.executor){
+        this.executor.destroy();
+      }
+      this.executor = new FixInitiatorExecutor(this.client);
+      this.client.emit('secretConnection');
+    }
+    if (msg === 'fix_initiator_started'){
+      if (!!this.executor){
+        this.executor.destroy();
+      }
+      this.executor = new FixSenderExecutor(this.client);
+      this.client.emit('fixInitiatorStarted');
+    }
+  }
+  if (opType === 101){ //e = error
+    console.log('CLIENT: Error',msg);
+    var c = this.client;
+    c.destroy();
+    this.client = null;
+  }
+};
+
+//Executor
+
+function Executor(client){
+  this.client = client;
+}
+
+Executor.prototype.destroy = function(){
+  this.client = null;
+}
+
+Executor.prototype.sendCredentials = function(name, password){
+  throw new Error('Executor: sendCredentials not implemented');
+};
+
+Executor.prototype.sendSecret = function(){
+  throw new Error('Executor: sendSecret not implemented');
+};
+
+Executor.prototype.sendFIXInitiatorSettings = function(settings){
+  throw new Error('Executor: sendFIXInitiatorSettings not implemented');
+};
+
+Executor.prototype.sendFIXMessage = function(fixMsg){
+  throw new Error('Executor: sendFIXMessage not implemented');
+};
+
+//CredentialsExecutor
+
+function CredentialsExecutor(client){
+  Executor.call(this,client);
+}
+
+CredentialsExecutor.prototype = Object.create(Executor.prototype, {constructor:{
+  value: CredentialsExecutor,
+  enumerable: false,
+  writable: false
+}});
+
+CredentialsExecutor.prototype.destroy = function(){
+  Executor.prototype.destroy.call(this);
+};
+
+CredentialsExecutor.prototype.sendCredentials = function(name, password){
   if (!name){
     throw new Error( 'sendCredentials: name param is required!');
   }
@@ -78,11 +299,29 @@ tcpClient.prototype.sendCredentials = function(name, password){
     throw new Error( 'sendCredentials: password param must be string!');
   }
   var credentialsMsg = 'c' + name + String.fromCharCode(0) + password + String.fromCharCode(0);
-  console.log('writing', credentialsMsg);
   this.client.write(credentialsMsg);
 };
 
-tcpClient.prototype.sendSecret = function(){
+//SecretExecutor
+
+function SecretExecutor(client, secret){
+  this.secret = secret;
+  Executor.call(this,client);
+  this.sendSecret();
+}
+
+SecretExecutor.prototype = Object.create(Executor.prototype, {constructor:{
+  value: SecretExecutor,
+  enumerable: false,
+  writable: false
+}});
+
+SecretExecutor.prototype.destroy = function(){
+  this.sendSecret = null;
+  Executor.prototype.destroy.call(this);
+};
+
+SecretExecutor.prototype.sendSecret = function(){
   if (!this.secret){
     throw new Error('sendSecret: There is no secret recieved!');
   }
@@ -92,7 +331,23 @@ tcpClient.prototype.sendSecret = function(){
   this.client.write(secret);
 };
 
-tcpClient.prototype.sendFIXInitiatorSettings = function(settings){
+//FixInitiatorExecutor
+
+function FixInitiatorExecutor(client){
+  Executor.call(this,client);
+}
+
+FixInitiatorExecutor.prototype = Object.create(Executor.prototype, {constructor:{
+  value: FixInitiatorExecutor,
+  enumerable: false,
+  writable: false
+}});
+
+FixInitiatorExecutor.prototype.destroy = function(){
+  Executor.prototype.destroy.call(this);
+};
+
+FixInitiatorExecutor.prototype.sendFIXInitiatorSettings = function(settings){
   if (!settings){
     throw new Error('sendFIXInitiatorSettings: settings param is required');
   }
@@ -103,7 +358,23 @@ tcpClient.prototype.sendFIXInitiatorSettings = function(settings){
   this.client.write(settingsMsg);
 };
 
-tcpClient.prototype.sendFIXMessage = function(fixMsg){
+//FixSenderExecutor
+
+function FixSenderExecutor(client){
+  Executor.call(this,client);
+}
+
+FixSenderExecutor.prototype = Object.create(Executor.prototype, {constructor:{
+  value: FixSenderExecutor,
+  enumerable: false,
+  writable: false
+}});
+
+FixSenderExecutor.prototype.destroy = function(){
+  Executor.prototype.destroy.call(this);
+};
+
+FixSenderExecutor.prototype.sendFIXMessage = function(fixMsg){
   if (!fixMsg){
     throw new Error('sendFixMsg: fixMsg param is required');
   };
@@ -122,47 +393,21 @@ tcpClient.prototype.sendFIXMessage = function(fixMsg){
   this.client.write(fixMsg);
 };
 
-//Event listeners
-
-tcpClient.prototype.connectionHandler = function(){
-  console.log('Connected to the server!');
-  //Listeners
-  this.client.on('error',this.onError.bind(this));
-  this.client.on('close', this.onClose.bind(this));
-  this.client.on('data', this.onData.bind(this));
-};
-
-//TODO inherit..
-tcpClient.prototype.secretConnectionHandler = function(){
-  console.log('Secret Connected to the server!');
-  //Listeners
-  this.client.on('error',this.onError.bind(this));
-  this.client.on('close', this.onClose.bind(this));
-  this.client.on('data', this.onData.bind(this));
-  //TODO remove, just for testing 
-  this.sendSecret();
-  this.sendFIXInitiatorSettings(settings);
-  this.sendFIXMessage(order);
-};
-
-tcpClient.prototype.onError = function(){
-  console.log('Client Error!');
-};
-
-tcpClient.prototype.onClose = function(){
-  console.log('Client Socket closed.');
-  this.client = net.createConnection(this.options,this.connectionHandler.bind(this));
-  this.client.on('error',console.log.bind(null,'Error connecting to the server!'));
-};
-
-tcpClient.prototype.onData = function(buffer){
-  console.log('Recieved data from server - ' + buffer);
-  if (buffer[0] === 114){
-    var secret = buffer.slice(1,17);
-    console.log('Dobio sam ovaj secret',secret,'i njegova duzina je',secret.length);
-    this.secret = secret;
-    this.client = net.createConnection(this.options,this.secretConnectionHandler.bind(this));
+FixSenderExecutor.prototype.generateZeroDelimitedTagValue = function(obj){
+  var res = '';
+  if (!obj){
+    return res;
   }
+  if (typeof obj !== 'object'){
+    return res;
+  }
+  for (var key in obj){
+    if (obj.hasOwnProperty(key)){
+      res += (key + String.fromCharCode(0) + obj[key] + String.fromCharCode(0));
+    }
+  }
+  res += String.fromCharCode(0);
+  return res;
 };
 
 module.exports = tcpClient;

@@ -60,13 +60,14 @@ Initiator.prototype.destroy = function(){
   this.connectionEstablished = null;
 };
 
-Initiator.prototype.start = function(){
-  this.quickfixInitiator.start(this.successfullyStarted.bind(this));
+Initiator.prototype.start = function(cb){
+  this.quickfixInitiator.start(this.successfullyStarted.bind(this,cb));
 };
 
-Initiator.prototype.successfullyStarted = function(){
+Initiator.prototype.successfullyStarted = function(cb){
   console.log('FIX Initiator Started');
   this.started = true;
+  cb();
 };
 
 //Getters/setters

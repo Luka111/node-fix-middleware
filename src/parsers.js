@@ -101,12 +101,13 @@ SessionParser.prototype.getSecret = function(){
   return this.secret;
 };
 
-function RequestParser(methods){
+function RequestParser(methods, connHandler){ // Connection handler is needed for notifying client
+  this.connHandler = connHandler;
+  this.methods = methods;
   this.operationName = '';
   this.reqArguments = [];
   this.zeroCnt = 0;
   this.requiredZeros = 1; //dynamically changing according to the number of operation params
-  this.methods = methods;
   this.byteWorker = new MethodByteWorker();
   IdleParser.call(this);
 }
@@ -123,11 +124,12 @@ RequestParser.prototype.destroy = function(){
     this.byteWorker.destroy();
   }
   this.byteWorker = null;
-  this.methods = null;
   this.requiredZeros = null;
   this.zeroCnt = null;
   this.reqArguments = null;
   this.operationName = null; 
+  this.myTcpFixServer = null;
+  this.connHandler = null;
   IdleParser.prototype.destroy.call(this);
 };
 
@@ -135,6 +137,7 @@ RequestParser.prototype.argumentByteWorkerFactory = function(operationName){
   var ctor = null;
   switch (operationName){
     case 'startFixInitiator':
+      this.reqArguments.push(this.fixInitiatorSuccessfullyStarted.bind(this));
       ctor = StringByteWorker;
       break;
     case 'sendFixMsg':
@@ -145,6 +148,11 @@ RequestParser.prototype.argumentByteWorkerFactory = function(operationName){
     throw new Error('Server does not implement ' + operationName + ' method');
   }
   return new ctor;
+};
+
+RequestParser.prototype.fixInitiatorSuccessfullyStarted = function(){
+  console.log('%%%%% FIX initiator se startovao i obavestio clienta o tome!');
+  this.connHandler.socketWriteResult(new Buffer('fix_initiator_started'));
 };
 
 RequestParser.prototype.execute = function(bufferItem){
