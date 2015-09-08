@@ -101,6 +101,64 @@ SessionParser.prototype.getSecret = function(){
   return this.secret;
 };
 
+//Application parser for TCP client
+
+function ApplicationParser(){
+  this.reset();
+  IdleParser.call(this);
+}
+
+ApplicationParser.prototype = Object.create(IdleParser.prototype, {constructor:{
+  value: ApplicationParser,
+  enumerable: false,
+  writable: false
+}});
+
+ApplicationParser.prototype.destroy = function(){
+  this.firstChar = null;
+  this.zeroCnt = null;
+  this.msg = null;
+  IdleParser.prototype.destroy.call(this);
+};
+
+ApplicationParser.prototype.reset = function(){
+  this.msg = '';
+  this.error = '';
+  this.wordIndicator = null;
+  this.readZero = false;
+  this.firstChar = true;
+};
+
+ApplicationParser.prototype.execute = function(bufferItem){
+  if (!!this.firstChar){
+    this.firstChar = false;
+    if (bufferItem === 114){ //if r (result) we expect secret
+      this.wordIndicator = 'msg';
+      console.log('PROCITAO R, postavio wordIndicator na',this.wordIndicator);
+    }else if(bufferItem === 101){
+      this.wordIndicator = 'error';
+      console.log('PROCITAO E, postavio wordIndicator na',this.wordIndicator);
+    }else{
+      //TODO error?
+    }
+  }else if (bufferItem === 0){
+    this[this.wordIndicator] = this.bufferHandler.generateNextWord().substring(1);
+    this.readZero = true;
+  }
+};
+
+ApplicationParser.prototype.getReadZero = function(){
+  return this.readZero;
+};
+
+ApplicationParser.prototype.getMsg = function(){
+  return this.msg;
+};
+
+ApplicationParser.prototype.getError = function(){
+  return this.error;
+};
+
 function RequestParser(methods, connHandler){ // Connection handler is needed for notifying client
   this.connHandler = connHandler;
   this.methods = methods;
@@ -118,6 +176,7 @@ RequestParser.prototype = Object.create(IdleParser.prototype, {constructor:{
   writable: false
 }});
 
+//TODO check ALL destructors if they match constructor properties
 RequestParser.prototype.destroy = function(){
   console.log('((((( REQUEST PARSER SE UBIJA )))))');
   if (!!this.byteWorker){
@@ -128,7 +187,7 @@ RequestParser.prototype.destroy = function(){
   this.zeroCnt = null;
   this.reqArguments = null;
   this.operationName = null; 
-  this.myTcpFixServer = null;
+  this.methods = null;
   this.connHandler = null;
   IdleParser.prototype.destroy.call(this);
 };
@@ -389,5 +448,6 @@ FIXMessage.prototype.destroy = function(){
 module.exports = {
   CredentialsParser : CredentialsParser,
   SessionParser : SessionParser,
-  RequestParser : RequestParser
+  RequestParser : RequestParser,
+  ApplicationParser : ApplicationParser
 };

@@ -1,10 +1,12 @@
 'use strict';
 
 var net = require('net');
+var crypto = require('crypto');
+
 var fixInitiator = require('./fix/fixInitiator.js');
+var ConnectionHandler = require('./connectionHandler.js');
 var Listeners = require('./listeners.js');
 var Parsers = require('./parsers.js');
-var crypto = require('crypto');
 
 function ServerMethods(){
   this.startFixInitiator = null;
@@ -26,11 +28,9 @@ function tcpFixServer(){
   this.server = net.createServer(this.onConnection.bind(this));
   this.fixInitiator = null;
   this.listeners = new Listeners('INITIATOR');
-  this.dataDelimiter = '#';
 };
 
 tcpFixServer.prototype.destroy = function(){
-  this.dataDelimiter = null;
   this.listeners.destroy();
   this.listeners = null;
   if (!!this.fixInitiator){
@@ -80,7 +80,6 @@ tcpFixServer.prototype.sendFixMsg = function(args){
     throw new Error('sendFixMsg requires exactly 1 param');
   }
   var msg = args[0];
-  console.log('STA SALJES BRE??',msg);
   if (typeof msg !== 'object'){
     throw new Error('sendFixMsg requires object as the first param! - ' + msg);
   }
@@ -174,131 +173,11 @@ tcpFixServer.generateSecret = function(){
 };
 
 
-//Abstract Handler
-function ConnectionHandler(socket, buffer, myTcpFixServer, parser) {
-  socket.removeAllListeners();
-  socket.on('error', this.onSocketError.bind(this));
-  socket.on('close', this.onSocketClosed.bind(this));
-  socket.on('data', this.onData.bind(this));
-  this.socket = socket;
-  this.myTcpFixServer = myTcpFixServer;
-  this.continueAfterExecute = true;
-  this.parser = parser;
-  this.onData(buffer);
-}
-
-ConnectionHandler.prototype.destroy = function () {
-  console.log('((((( CONNECTION HANDLER SE UBIJA )))))');
-  this.parser.destroy();
-  this.parser = null;
-  this.continueAfterExecute = null;
-  this.myTcpFixServer = null;
-  this.socket = null;
-};
-
-ConnectionHandler.prototype.onSocketError = function () {
-  console.log('Handler:  Socket error!');
-  this.destroy();
-};
-
-ConnectionHandler.prototype.onSocketClosed = function () {
-  console.log('Handler:  Socket closed!');
-  this.destroy();
-};
-
-ConnectionHandler.prototype.makeWriteBuffer = function(buffer,operation){
-  if (!operation.length){
-    throw new Error('operation is required!');
-  }
-  if (typeof operation !== 'string'){
-    throw new Error('operation must be string');
-  }
-  if (operation.length !== 1){
-    throw new Error('operation length is not 1');
-  }
-  var newBuffer = new Buffer(buffer.length + 2);
-  newBuffer[0] = operation.charCodeAt(0);
-  buffer.copy(newBuffer,1);
-  newBuffer[newBuffer.length - 1] = 0;
-  return newBuffer;
-};
-
-ConnectionHandler.prototype.socketWriteError = function(msg){
-  if (!msg){
-    throw new Error('socketWriteError: must write something!');
-  }
-  if (!Buffer.isBuffer(msg)){
-    throw new Error('socketWriteError accepts buffer as argument');
-  }
-  this.socket.write(this.makeWriteBuffer(msg,'e'));
-};
-
-ConnectionHandler.prototype.socketWriteResult = function(msg){
-  if (!msg){
-    throw new Error('socketWriteError: must write something!');
-  }
-  if (!Buffer.isBuffer(msg)){
-    throw new Error('socketWriteResult accepts buffer as argument');
-  }
-  this.socket.write(this.makeWriteBuffer(msg,'r'));
-};
-
-ConnectionHandler.prototype.socketWriteNotification = function(msg){
-  if (!msg){
-    throw new Error('socketWriteError: must write something!');
-  }
-  if (!Buffer.isBuffer(msg)){
-    throw new Error('socketWriteNotification accepts buffer as argument');
-  }
-  this.socket.write(this.makeWriteBuffer(msg,'n'));
-};
-
-//template method
-ConnectionHandler.prototype.onData = function (buffer) {
-  if (!this.socket) return;
-  console.log('*** Recieved buffer :',buffer.toString());
-  //try{
-    for (var i=0; i<buffer.length; i++){
-      this.parser.executeByte(buffer[i]);
-      var executed = this.executeIfReadingFinished(this.executeOnReadingFinished.bind(this,buffer));
-      if (!!executed && !this.continueAfterExecute){
-        return;
-      }
-    }
-  //}catch (err){
-    //console.log('ERROR: ',err);
-    //var s = this.socket;
-    //this.socket = null;
-    //s.socketWriteError(new Buffer(err.toString()));
-    //s.end();
-    //s.destroy();
-    //return;
-  //}
-};
-
-//abstract
-ConnectionHandler.prototype.readingFinished = function(){
-  throw new Error('readingFinished not implemented');
-};
-
-ConnectionHandler.prototype.executeIfReadingFinished = function(cb){
-  if (this.readingFinished()){
-    cb();
-    return true;
-  }
-  return false;
-};
-
-//abstract
-ConnectionHandler.prototype.executeOnReadingFinished = function(){
-  throw new Error('executeOnReadingFinished not implemented');
-};
-
 //Credentials Handler - chekcing user credentials after 'c'
 
-function CredentialsHandler(socket, buffer, myTcpFixServer) {
+function CredentialsHandler(socket, buffer, myTcpParent) {
   console.log('new CredentialsHandler', socket.remoteAddress, buffer, '.');
-  ConnectionHandler.call(this, socket, buffer, myTcpFixServer, new Parsers.CredentialsParser);
+  ConnectionHandler.call(this, socket, buffer, myTcpParent, new Parsers.CredentialsParser);
   this.continueAfterExecute = false;
 }
 
@@ -336,9 +215,9 @@ CredentialsHandler.prototype.executeOnReadingFinished = function(buffer){
 
 //Session Handler - checking Secret (first 16 bytes) after 's'
 
-function SessionHandler(socket, buffer, myTcpFixServer) {
+function SessionHandler(socket, buffer, myTcpParent) {
   console.log('new SessionHandler');
-  ConnectionHandler.call(this, socket, buffer, myTcpFixServer, new Parsers.SessionParser);
+  ConnectionHandler.call(this, socket, buffer, myTcpParent, new Parsers.SessionParser);
   this.continueAfterExecute = false;
 }
 
@@ -364,9 +243,9 @@ SessionHandler.prototype.executeOnReadingFinished = function(buffer){
   if (tcpFixServer.checkSecret(this.parser.getSecret())){
     console.log('++DOBAR SECRET!++');
     this.socketWriteResult(new Buffer('correct_secret'));
-    var myTcpFixServer = this.myTcpFixServer;
+    var myTcpParent = this.myTcpParent;
     this.destroy();
-    new RequestHandler(s,bufferLeftover,myTcpFixServer);
+    new RequestHandler(s,bufferLeftover,myTcpParent);
   }else{
     console.log('--LOS SECRET!--');
     this.socketWriteError(new Buffer('Incorrect secret!'));
@@ -378,9 +257,9 @@ SessionHandler.prototype.executeOnReadingFinished = function(buffer){
 
 //Request Handler - parsing user request -> <operation name>0<param0>0<param1>0...<paramN>0
 
-function RequestHandler(socket, buffer, myTcpFixServer) {
+function RequestHandler(socket, buffer, myTcpParent) {
   console.log('new Request handler');
-  ConnectionHandler.call(this, socket, buffer, myTcpFixServer, new Parsers.RequestParser(myTcpFixServer.methods,this));
+  ConnectionHandler.call(this, socket, buffer, myTcpParent, new Parsers.RequestParser(myTcpParent.methods,this));
 }
 
 RequestHandler.prototype = Object.create(ConnectionHandler.prototype, {constructor:{
@@ -402,7 +281,7 @@ RequestHandler.prototype.readingFinished = function(){
 };
 
 RequestHandler.prototype.executeOnReadingFinished = function(buffer){
-  this.parser.callMethod(this.myTcpFixServer);
+  this.parser.callMethod(this.myTcpParent);
 };
 
 module.exports = tcpFixServer;
