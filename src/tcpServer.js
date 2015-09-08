@@ -28,9 +28,11 @@ function tcpFixServer(){
   this.server = net.createServer(this.onConnection.bind(this));
   this.fixInitiator = null;
   this.listeners = new Listeners('INITIATOR');
+  this.connectionHandler = null;
 };
 
 tcpFixServer.prototype.destroy = function(){
+  this.connectionHandler = null;
   this.listeners.destroy();
   this.listeners = null;
   if (!!this.fixInitiator){

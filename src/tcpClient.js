@@ -6,6 +6,7 @@ var events = require('events');
 
 var Parsers = require('./parsers.js');
 var ConnectionHandler = require('./connectionHandler.js');
+var Coder = require('./codingFunctions.js');
 
 //tcp Client
 
@@ -93,11 +94,30 @@ CarpetConnectionHandler.prototype.onData = function(buffer){
   }
 };
 
+CarpetConnectionHandler.prototype.socketWriteCredentials = function(name,password){
+  if (!name){
+    throw new Error('socketWriteCredentials: name is required!');
+  }
+  if (!password){
+    throw new Error('socketWriteCredentials: password is required!');
+  }
+  if (!Buffer.isBuffer(name)){
+    throw new Error('socketWriteCredentials: accepts buffer as argument');
+  }
+  if (!Buffer.isBuffer(password)){
+    throw new Error('socketWriteCredentials: accepts buffer as argument');
+  }
+  var msg1 = this.makeWriteBuffer(name,'c',true);
+  var msg2 = this.makeWriteBuffer(password,'',true);
+  var msg = Buffer.concat([msg1,msg2]);
+  console.log('==== STA JE MSG POSLE CONCAT?',msg);
+  this.socket.write(msg);
+};
+
 
 //PlainConnectionHandler
 
 function PlainConnectionHandler(socket,buffer,myTcpParent){
-  myTcpParent.connectionHandler = this;
   ConnectionHandler.call(this,socket,buffer,myTcpParent, new Parsers.SessionParser());
 }
 
@@ -134,7 +154,6 @@ PlainConnectionHandler.prototype.executeOnReadingFinished = function(){
 //SecretConnectionHandler
 
 function SecretConnectionHandler(socket,buffer,myTcpParent,secret){
-  myTcpParent.connectionHandler = this;
   ConnectionHandler.call(this,socket,buffer,myTcpParent,new Parsers.ApplicationParser());
   this.socketWriteSecret(secret);
 };
@@ -189,35 +208,6 @@ SecretConnectionHandler.prototype.executeOnReadingFinished = function(){
   }
   this.parser.reset();
 };
-
-/*
-SecretConnectionHandler.prototype.onData = function(buffer){
-  var opType = buffer[0];
-  var msg = buffer.slice(1,buffer.length - 1).toString(); //this removes 0 at the end, TODO add reading in chunks
-  if (opType === 114){ //r = result
-    if (msg === 'correct_secret'){
-      if (!!this.executor){
-        this.executor.destroy();
-      }
-      this.executor = new FixInitiatorExecutor(this);
-      this.socket.emit('secretConnection');
-    }
-    if (msg === 'fix_initiator_started'){
-      if (!!this.executor){
-        this.executor.destroy();
-      }
-      this.executor = new FixSenderExecutor(this);
-      this.socket.emit('fixInitiatorStarted');
-    }
-  }
-  if (opType === 101){ //e = error
-    console.log('CLIENT: Error',msg);
-    var c = this.socket;
-    c.destroy();
-    this.socket = null;
-  }
-};
-*/
 
 //Executor
 
@@ -275,10 +265,6 @@ CredentialsExecutor.prototype.sendCredentials = function(name, password){
     throw new Error( 'sendCredentials: password param must be string!');
   }
   this.handler.socketWriteCredentials(new Buffer(name), new Buffer(password));
-  /*
-  var credentialsMsg = 'c' + name + String.fromCharCode(0) + password + String.fromCharCode(0);
-  this.socket.write(credentialsMsg);
-  */
 };
 
 //FixInitiatorExecutor
@@ -304,8 +290,7 @@ FixInitiatorExecutor.prototype.sendFIXInitiatorSettings = function(settings){
   if (typeof settings !== 'string'){
     throw new Error('sendFIXInitiatorSettings: settings param type must be string');
   }
-  var settingsMsg = 'startFixInitiator' + String.fromCharCode(0) + settings + String.fromCharCode(0);
-  this.handler.socket.write(settingsMsg); //TODO make methods for sending operation requests
+  this.handler.sendMethodBuffer(new Buffer(settings),new Buffer('startFixInitiator'));
 };
 
 //FixSenderExecutor
@@ -339,8 +324,8 @@ FixSenderExecutor.prototype.sendFIXMessage = function(fixMsg){
   if (fixMsg.hasOwnProperty('tags')){
     tags = this.generateZeroDelimitedTagValue(fixMsg.tags);
   }
-  var fixMsg = 'sendFixMsg' + String.fromCharCode(0) + header + tags + String.fromCharCode(0);
-  this.handler.socket.write(fixMsg); //TODO make methods for sending operation requests
+  var codedFixMsg = Coder.createZeroDelimitedString(fixMsg);
+  this.handler.sendMethodBuffer(new Buffer(codedFixMsg),new Buffer('sendFixMsg'));
 };
 
 FixSenderExecutor.prototype.generateZeroDelimitedTagValue = function(obj){

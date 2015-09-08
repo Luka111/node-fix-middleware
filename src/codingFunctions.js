@@ -52,6 +52,35 @@ Coder.prototype.codeFIXmessage = function(decodedElement){
   return codedResult;
 };
 
+Coder.prototype.createZeroDelimitedString = function(obj){
+  var result = {value: ''};
+  this.structNames.forEach(this.generatePerProperty.bind(this,obj,result));
+  return result.value;
+};
+
+Coder.prototype.generatePerProperty = function(obj,result,structName){
+  if (obj.hasOwnProperty(structName)){
+    result.value += this.generateZeroDelimitedTagValue(obj[structName]);
+  }
+};
+
+Coder.prototype.generateZeroDelimitedTagValue = function(obj){
+  var res = '';
+  if (!obj){
+    return res;
+  }
+  if (typeof obj !== 'object'){
+    return res;
+  }
+  for (var key in obj){
+    if (obj.hasOwnProperty(key)){
+      res += (key + String.fromCharCode(0) + obj[key] + String.fromCharCode(0));
+    }
+  }
+  res += String.fromCharCode(0);
+  return res;
+};
+
 //Intern coding functions
 
 Coder.prototype.codeFIXstruct = function(decodedElement,codedResult,structName){
