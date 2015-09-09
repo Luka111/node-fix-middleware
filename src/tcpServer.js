@@ -7,6 +7,7 @@ var fixInitiator = require('./fix/fixInitiator.js');
 var ConnectionHandler = require('./connectionHandler.js');
 var Listeners = require('./listeners.js');
 var Parsers = require('./parsers.js');
+var Coder = require('./codingFunctions.js');
 
 function ServerMethods(){
   this.startFixInitiator = null;
@@ -28,6 +29,9 @@ function tcpFixServer(){
   this.server = net.createServer(this.onConnection.bind(this));
   this.fixInitiator = null;
   this.listeners = new Listeners('INITIATOR');
+  this.listeners.onLogon = this.onLogonListener.bind(this,'INITIATOR');
+  this.listeners.onLogout = this.onLogoutListener.bind(this,'INITIATOR');
+  this.listeners.fromApp = this.fromAppListener.bind(this,'INITIATOR');
   this.connectionHandler = null;
 };
 
@@ -43,6 +47,27 @@ tcpFixServer.prototype.destroy = function(){
   this.server = null;
   this.methods.destroy();
   this.methods = null;
+};
+
+//Overridden FIX listeners
+
+tcpFixServer.prototype.onLogonListener = function(emitter,sessionID){
+  this.listeners.onLogonListener(emitter,sessionID); //super
+  this.fixInitiator.setConnectionEstablished(true);
+};
+
+tcpFixServer.prototype.onLogoutListener = function(emitter,sessionID){
+  this.listeners.onLogoutListener(emitter,sessionID); //super
+  this.fixInitiator.setConnectionEstablished(false);
+};
+
+tcpFixServer.prototype.fromAppListener = function(emitter,msg,sessionID){
+  this.listeners.fromAppListener(emitter,msg,sessionID); //super
+  console.log('$$$$$$$$ DOBIO PORUKU OD ACCEPTORA',msg);
+  var codedFixMsg = Coder.createZeroDelimitedString(msg.message);
+  console.log('< $$$ KODOVANA',codedFixMsg);
+  //connection handler must exists because fixInitiator exists
+  this.connectionHandler.socketWriteEvent(new Buffer(codedFixMsg));
 };
 
 //Intern methods

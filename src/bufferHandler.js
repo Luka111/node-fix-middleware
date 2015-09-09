@@ -55,10 +55,14 @@ BufferHandler.prototype.checkCache = function(buffer){
   }
 }
 
-BufferHandler.prototype.clearCache= function(){
+BufferHandler.prototype.clearCache = function(){
   this.cache = new Buffer(this.initialCacheSize);
   this.lastWrittenIndex = 0;
   this.lastWrittenWordIndex = 0;
+};
+
+BufferHandler.prototype.skipByteOnNextWord = function(){
+  this.lastWrittenWordIndex++;
 };
 
 module.exports = BufferHandler;

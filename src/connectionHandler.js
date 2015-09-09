@@ -134,6 +134,16 @@ ConnectionHandler.prototype.socketWriteNotification = function(msg){
   this.socket.write(this.makeWriteBuffer(msg,'n',true));
 };
 
+ConnectionHandler.prototype.socketWriteEvent = function(msg){
+  if (!msg){
+    throw new Error('socketWriteEvent : must write something!');
+  }
+  if (!Buffer.isBuffer(msg)){
+    throw new Error('socketWriteEvent: accepts buffer as argument');
+  }
+  this.socket.write(this.makeWriteBuffer(msg,'o',true));
+};
+
 //template method
 ConnectionHandler.prototype.onData = function (buffer) {
   if (!this.socket) return;

@@ -105,6 +105,7 @@ SessionParser.prototype.getSecret = function(){
 
 function ApplicationParser(){
   this.reset();
+  this.reqArguments = [];
   IdleParser.call(this);
 }
 
@@ -115,8 +116,13 @@ ApplicationParser.prototype = Object.create(IdleParser.prototype, {constructor:{
 }});
 
 ApplicationParser.prototype.destroy = function(){
-  this.firstChar = null;
+  this.reqArguments = null;
+  this.byteWorker = null;
   this.zeroCnt = null;
+  this.firstChar = null;
+  this.readZero = null;
+  this.wordIndicator = null;
+  this.error = null; 
   this.msg = null;
   IdleParser.prototype.destroy.call(this);
 };
@@ -127,32 +133,43 @@ ApplicationParser.prototype.reset = function(){
   this.wordIndicator = null;
   this.readZero = false;
   this.firstChar = true;
+  this.zeroCnt = 0;
+  this.byteWorker = null;
 };
 
 ApplicationParser.prototype.execute = function(bufferItem){
   if (!!this.firstChar){
     this.firstChar = false;
-    if (bufferItem === 114){ //if r (result) we expect secret
+    if (bufferItem === 114){ //if r (result) we expect return message 
       this.wordIndicator = 'msg';
       console.log('PROCITAO R, postavio wordIndicator na',this.wordIndicator);
-    }else if(bufferItem === 101){
+      this.byteWorker = new NextWordByteWorker();
+    }else if(bufferItem === 101){ //if e (error) we expect error message
       this.wordIndicator = 'error';
       console.log('PROCITAO E, postavio wordIndicator na',this.wordIndicator);
+      this.byteWorker = new NextWordByteWorker();
+    }else if(bufferItem === 111){ //if o (event) we expect fix message
+      console.log('PROCITAO O, napravio FixMsgByteWorker');
+      this.byteWorker = new FixMsgByteWorker();
+      this.bufferHandler.skipByteOnNextWord();
     }else{
       //TODO error?
     }
-  }else if (bufferItem === 0){
-    this[this.wordIndicator] = this.bufferHandler.generateNextWord().substring(1);
-    this.readZero = true;
+  }else {
+    this.byteWorker.eatByte(bufferItem,this);
   }
 };
 
 ApplicationParser.prototype.getReadZero = function(){
-  return this.readZero;
+  return this.readZero || this.reqArguments.length;
 };
 
 ApplicationParser.prototype.getMsg = function(){
   return this.msg;
+};
+
+ApplicationParser.prototype.getFixMsg = function(){
+  return this.reqArguments.shift();
 };
 
 ApplicationParser.prototype.getError = function(){
@@ -254,6 +271,27 @@ ByteWorker.prototype.eatByte = function(bufferItem){
   throw new Error('eatByte is not implemented');
 };
 
+function NextWordByteWorker(){
+  ByteWorker.call(this);
+}
+
+NextWordByteWorker.prototype = Object.create(ByteWorker.prototype, {constructor:{
+  value: NextWordByteWorker,
+  enumerable: false,
+  writable: false
+}});
+
+NextWordByteWorker.prototype.destroy = function(){
+  ByteWorker.prototype.destroy.call(this);
+};
+
+NextWordByteWorker.prototype.eatByte = function(bufferItem,parser){
+  if (bufferItem === 0){
+    parser[parser.wordIndicator] = parser.bufferHandler.generateNextWord().substring(1);
+    parser.readZero = true;
+  }
+};
+
 function MethodByteWorker(){
   ByteWorker.call(this);
 }
@@ -315,7 +353,7 @@ function FixMsgByteWorker(){
   this.value = null;
   this.fixmsg = new FIXMessage();
   this.zeroCnt = 0;
-  this.fixTags = ['header','tags']; //TODO groups
+  this.fixTags = ['header','tags','trailer']; //TODO groups
   this.fixTagsCnt = 0;
   ByteWorker.call(this);
   console.log('NAPRAVLJEN FixMsgByteWorker!!!');
@@ -435,6 +473,7 @@ ValueByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker)
 function FIXMessage(){
   this.header = {};
   this.tags = {};
+  this.trailer = {};
   //TODO groups
 };
 

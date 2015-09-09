@@ -44,8 +44,6 @@ tcpClient.prototype.sendCredentials = function(name,password){
 tcpClient.prototype.sendFIXInitiatorSettings = function(settings){
   if (!!this.connectionHandler.executor){
     this.connectionHandler.executor.sendFIXInitiatorSettings(settings);
-  }else{
-    console.log('NEMAM EXECUTORA BRE',this.connectionHandler.constructor);
   }
 };
 
@@ -206,6 +204,8 @@ SecretConnectionHandler.prototype.executeOnReadingFinished = function(){
       this.myTcpParent.events.emit('fixInitiatorStarted');
       break; 
   }
+  var fixMsg = this.parser.getFixMsg();
+  console.log('!=!=!=!=!=!=!=! DOBIO SAM OVU FIX PORUKU SA SERVERA',fixMsg);
   this.parser.reset();
 };
 
