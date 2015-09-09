@@ -94,6 +94,33 @@ ConnectionHandler.prototype.makeWriteBuffer = function(buffer,operation,addZero)
   return newBuffer;
 };
 
+ConnectionHandler.prototype.makeWriteBufferArray = function(bufArray,opCode){
+  if (!bufArray){
+    throw 'bufArray is requried!';
+  }
+  if (!(bufArray instanceof Array)){
+    throw 'makeWriteBufferArray accepts array of params';
+  }
+  if (bufArray.length === 0){
+    throw 'array is empty';
+  }
+  if (!opCode){
+    throw 'opCode is requried!';
+  }
+  if (typeof opCode !== 'string'){
+    throw 'opCode must be string!';
+  }
+  if (typeof opCode.length > 1){
+    throw 'opCode must be length 1!';
+  }
+  var concatArray = [];
+  concatArray.push(this.makeWriteBuffer(bufArray[0],opCode,true));
+  for (var i=1; i<bufArray.length; i++){
+    concatArray.push(this.makeWriteBuffer(bufArray[i],'',true));
+  }
+  return Buffer.concat(concatArray);
+};
+
 ConnectionHandler.prototype.socketWriteSecret = function(secret){
   if (!secret){
     throw new Error('socketWriteSecret: secret is required!');
@@ -134,14 +161,21 @@ ConnectionHandler.prototype.socketWriteNotification = function(msg){
   this.socket.write(this.makeWriteBuffer(msg,'n',true));
 };
 
-ConnectionHandler.prototype.socketWriteEvent = function(msg){
+ConnectionHandler.prototype.socketWriteEvent = function(eventName,msg){
+  if (!eventName){
+    throw new Error('socketWriteEvent : must write something!');
+  }
+  if (!Buffer.isBuffer(eventName)){
+    throw new Error('socketWriteEvent: accepts buffer as argument');
+  }
   if (!msg){
     throw new Error('socketWriteEvent : must write something!');
   }
   if (!Buffer.isBuffer(msg)){
     throw new Error('socketWriteEvent: accepts buffer as argument');
   }
-  this.socket.write(this.makeWriteBuffer(msg,'o',true));
+  var buffer = this.makeWriteBufferArray([eventName,msg],'o');
+  this.socket.write(buffer);
 };
 
 //template method

@@ -54,6 +54,10 @@ tcpFixServer.prototype.destroy = function(){
 tcpFixServer.prototype.onLogonListener = function(emitter,sessionID){
   this.listeners.onLogonListener(emitter,sessionID); //super
   this.fixInitiator.setConnectionEstablished(true);
+  console.log('@@@@@@@@@ SESSIONID',sessionID);
+  var codedSessionId = Coder.createZeroDelimitedSessionId(sessionID);
+  console.log('@@@@@@@@@ CODED SESSIONID',codedSessionId);
+  this.connectionHandler.socketWriteEvent(new Buffer('connectionEstablished'),new Buffer(codedSessionId));
 };
 
 tcpFixServer.prototype.onLogoutListener = function(emitter,sessionID){
@@ -64,10 +68,10 @@ tcpFixServer.prototype.onLogoutListener = function(emitter,sessionID){
 tcpFixServer.prototype.fromAppListener = function(emitter,msg,sessionID){
   this.listeners.fromAppListener(emitter,msg,sessionID); //super
   console.log('$$$$$$$$ DOBIO PORUKU OD ACCEPTORA',msg);
-  var codedFixMsg = Coder.createZeroDelimitedString(msg.message);
+  var codedFixMsg = Coder.createZeroDelimitedFixMsg(msg.message);
   console.log('< $$$ KODOVANA',codedFixMsg);
   //connection handler must exists because fixInitiator exists
-  this.connectionHandler.socketWriteEvent(new Buffer(codedFixMsg));
+  this.connectionHandler.socketWriteEvent(new Buffer('acceptFixMsg'),new Buffer(codedFixMsg));
 };
 
 //Intern methods

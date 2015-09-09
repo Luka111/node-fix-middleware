@@ -66,4 +66,5 @@ function sendFIXMessage(){
 
 client.executeCbOnEvent('plainConnection',introduce);
 client.executeCbOnEvent('secretConnection',startFIXInitiator);
-client.executeCbOnEvent('fixInitiatorStarted',sendFIXMessage);
+//client.executeCbOnEvent('fixInitiatorStarted',sendFIXMessage);
+client.executeCbOnEvent('fixConnectionEstablished',sendFIXMessage);

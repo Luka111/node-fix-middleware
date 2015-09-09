@@ -101,89 +101,10 @@ SessionParser.prototype.getSecret = function(){
   return this.secret;
 };
 
-//Application parser for TCP client
-
-function ApplicationParser(){
-  this.reset();
-  this.reqArguments = [];
-  IdleParser.call(this);
-}
-
-ApplicationParser.prototype = Object.create(IdleParser.prototype, {constructor:{
-  value: ApplicationParser,
-  enumerable: false,
-  writable: false
-}});
-
-ApplicationParser.prototype.destroy = function(){
-  this.reqArguments = null;
-  this.byteWorker = null;
-  this.zeroCnt = null;
-  this.firstChar = null;
-  this.readZero = null;
-  this.wordIndicator = null;
-  this.error = null; 
-  this.msg = null;
-  IdleParser.prototype.destroy.call(this);
-};
-
-ApplicationParser.prototype.reset = function(){
-  this.msg = '';
-  this.error = '';
-  this.wordIndicator = null;
-  this.readZero = false;
-  this.firstChar = true;
-  this.zeroCnt = 0;
-  this.byteWorker = null;
-};
-
-ApplicationParser.prototype.execute = function(bufferItem){
-  if (!!this.firstChar){
-    this.firstChar = false;
-    if (bufferItem === 114){ //if r (result) we expect return message 
-      this.wordIndicator = 'msg';
-      console.log('PROCITAO R, postavio wordIndicator na',this.wordIndicator);
-      this.byteWorker = new NextWordByteWorker();
-    }else if(bufferItem === 101){ //if e (error) we expect error message
-      this.wordIndicator = 'error';
-      console.log('PROCITAO E, postavio wordIndicator na',this.wordIndicator);
-      this.byteWorker = new NextWordByteWorker();
-    }else if(bufferItem === 111){ //if o (event) we expect fix message
-      console.log('PROCITAO O, napravio FixMsgByteWorker');
-      this.byteWorker = new FixMsgByteWorker();
-      this.bufferHandler.skipByteOnNextWord();
-    }else{
-      //TODO error?
-    }
-  }else {
-    this.byteWorker.eatByte(bufferItem,this);
-  }
-};
-
-ApplicationParser.prototype.getReadZero = function(){
-  return this.readZero || this.reqArguments.length;
-};
-
-ApplicationParser.prototype.getMsg = function(){
-  return this.msg;
-};
-
-ApplicationParser.prototype.getFixMsg = function(){
-  return this.reqArguments.shift();
-};
-
-ApplicationParser.prototype.getError = function(){
-  return this.error;
-};
-
 function RequestParser(methods, connHandler){ // Connection handler is needed for notifying client
   this.connHandler = connHandler;
   this.methods = methods;
-  this.operationName = '';
-  this.reqArguments = [];
-  this.zeroCnt = 0;
-  this.requiredZeros = 1; //dynamically changing according to the number of operation params
-  this.byteWorker = new MethodByteWorker();
+  this.reset();
   IdleParser.call(this);
 }
 
@@ -209,21 +130,29 @@ RequestParser.prototype.destroy = function(){
   IdleParser.prototype.destroy.call(this);
 };
 
+RequestParser.prototype.reset = function(){
+  this.zeroCnt = 0;
+  this.requiredZeros = 1;
+  this.reqArguments = [];
+  this.operationName = '';
+  if (!!this.byteWorker){
+    this.byteWorker.destroy();
+  }
+  this.byteWorker = new MethodByteWorker();
+  if (!!this.bufferHandler){
+    this.bufferHandler.clearCache();
+  }
+};
+
 RequestParser.prototype.argumentByteWorkerFactory = function(operationName){
-  var ctor = null;
   switch (operationName){
     case 'startFixInitiator':
       this.reqArguments.push(this.fixInitiatorSuccessfullyStarted.bind(this));
-      ctor = StringByteWorker;
-      break;
+      return new StringByteWorker();
     case 'sendFixMsg':
-      ctor = FixMsgByteWorker;
-      break;
+      return new TagValueByteWorker(FIXMessage);
   };
-  if (!ctor){
-    throw new Error('Server does not implement ' + operationName + ' method');
-  }
-  return new ctor;
+  throw new Error('Server does not implement ' + operationName + ' method');
 };
 
 RequestParser.prototype.fixInitiatorSuccessfullyStarted = function(){
@@ -247,17 +176,94 @@ RequestParser.prototype.zeroCntEqualsRequiredZeros = function(){
   return this.zeroCnt === this.requiredZeros;
 };
 
-RequestParser.prototype.callMethod = function(tcpFixServer){
-  console.log('FINISHED reading arguments for',this.operationName,'method. Calling it...',this.reqArguments);
-  this.methods[this.operationName].call(tcpFixServer,this.reqArguments);
-  this.byteWorker.destroy();
-  this.byteWorker = new MethodByteWorker();
-  this.zeroCnt = 0;
-  this.requiredZeros = 1;
-  this.reqArguments = [];
-  this.operationName = '';
-  this.bufferHandler.clearCache();
+RequestParser.prototype.callMethod = function(context){
+  if (!!this.operationName){
+    console.log('FINISHED reading arguments for',this.operationName,'method. Calling it...',this.reqArguments);
+    this.methods[this.operationName].call(context,this.reqArguments);
+  }
+  this.reset();
 };
+
+//Application parser for TCP client
+
+function ApplicationParser(methods, connHandler){
+  RequestParser.call(this,methods,connHandler);
+}
+
+ApplicationParser.prototype = Object.create(RequestParser.prototype, {constructor:{
+  value: ApplicationParser,
+  enumerable: false,
+  writable: false
+}});
+
+ApplicationParser.prototype.destroy = function(){
+  this.firstChar = null;
+  this.wordIndicator = null;
+  this.error = null; 
+  this.msg = null;
+  RequestParser.prototype.destroy.call(this);
+};
+
+ApplicationParser.prototype.reset = function(){
+  this.msg = '';
+  this.error = '';
+  this.wordIndicator = null;
+  this.firstChar = true;
+  RequestParser.prototype.reset.call(this);
+};
+
+//override
+ApplicationParser.prototype.argumentByteWorkerFactory = function(operationName){
+  switch (operationName){
+    case 'acceptFixMsg':
+      return new TagValueByteWorker(FIXMessage);
+    case 'connectionEstablished':
+      return new TagValueByteWorker(SessionIDMessage);
+  };
+  throw new Error(operationName + ' method is not implemented!');
+};
+
+//override
+ApplicationParser.prototype.execute = function(bufferItem){
+  if (!!this.firstChar){
+    this.firstChar = false;
+    if (bufferItem === 114){ //if r (result) we expect return message 
+      this.wordIndicator = 'msg';
+      console.log('PROCITAO R, postavio wordIndicator na',this.wordIndicator);
+      this.byteWorker = new NextWordByteWorker();
+    }else if(bufferItem === 101){ //if e (error) we expect error message
+      this.wordIndicator = 'error';
+      console.log('PROCITAO E, postavio wordIndicator na',this.wordIndicator);
+      this.byteWorker = new NextWordByteWorker();
+    }else if(bufferItem === 111){ //if o (event) we expect fix message
+      console.log('PROCITAO O, napravio MethodByteWorker');
+      this.byteWorker = new MethodByteWorker();
+      this.bufferHandler.skipByteOnNextWord();
+    }else{
+      //TODO error?
+    }
+  }else {
+    this.byteWorker.eatByte(bufferItem,this);
+  }
+};
+
+ApplicationParser.prototype.getReadZero = function(){
+  return this.zeroCnt === this.requiredZeros;
+};
+
+ApplicationParser.prototype.getMsg = function(){
+  return this.msg;
+};
+
+ApplicationParser.prototype.getError = function(){
+  return this.error;
+};
+
+//override
+ApplicationParser.prototype.fixInitiatorSuccessfullyStarted = function(){
+  return; 
+};
+
 
 //Byte workers...
 
@@ -288,7 +294,7 @@ NextWordByteWorker.prototype.destroy = function(){
 NextWordByteWorker.prototype.eatByte = function(bufferItem,parser){
   if (bufferItem === 0){
     parser[parser.wordIndicator] = parser.bufferHandler.generateNextWord().substring(1);
-    parser.readZero = true;
+    parser.zeroCnt++;
   }
 };
 
@@ -310,6 +316,7 @@ MethodByteWorker.prototype.eatByte = function(bufferItem,parser){
   if (bufferItem === 0){
     parser.zeroCnt++;
     parser.operationName = parser.bufferHandler.generateNextWord();
+    console.log('STA JE PARSER',parser);
     if (parser.methods.hasOwnProperty(parser.operationName)){
       console.log('METHOD',parser.operationName,'exists and requires',parser.methods[parser.operationName].length,'params');
       parser.requiredZeros += parser.methods[parser.operationName].length;
@@ -318,7 +325,7 @@ MethodByteWorker.prototype.eatByte = function(bufferItem,parser){
     }else{
       parser.requiredZeros = undefined;
       console.log('STA BRE',parser.operationName);
-      throw new Error('Sever does not implement',parser.operationName,'method.');
+      throw new Error(parser.operationName + 'method is not implemented');
     }
   }
 };
@@ -347,31 +354,30 @@ StringByteWorker.prototype.eatByte = function(bufferItem,parser){
   }
 };
 
-function FixMsgByteWorker(){
+function TagValueByteWorker(objForFillCtor){
   this.byteWorker = new TagByteWorker();
   this.tag = null;
   this.value = null;
-  this.fixmsg = new FIXMessage();
+  this.objForFillCtor = objForFillCtor;
+  this.objForFill = new objForFillCtor;
   this.zeroCnt = 0;
-  this.fixTags = ['header','tags','trailer']; //TODO groups
-  this.fixTagsCnt = 0;
+  this.tagsCnt = 0;
   ByteWorker.call(this);
-  console.log('NAPRAVLJEN FixMsgByteWorker!!!');
+  console.log('NAPRAVLJEN TagValueByteWorker!!!');
 }
 
-FixMsgByteWorker.prototype = Object.create(ByteWorker.prototype, {constructor:{
-  value: FixMsgByteWorker,
+TagValueByteWorker.prototype = Object.create(ByteWorker.prototype, {constructor:{
+  value: TagValueByteWorker,
   enumerable: false,
   writable: false
 }});
 
-FixMsgByteWorker.prototype.destroy = function(){
-  console.log('((((( FixMsgByteWorker SE UBIJA )))))');
-  this.fixTagsCnt = null;
-  this.fixTags = null;
+TagValueByteWorker.prototype.destroy = function(){
+  console.log('((((( TagValueByteWorker SE UBIJA )))))');
+  this.tagsCnt = null;
   this.zeroCnt = null
-  this.fixmsg.destroy();
-  this.fixmsg = null;
+  this.objForFill.destroy();
+  this.objForFill = null;
   this.value = null;
   this.tag = null;
   if (!!this.byteWorker){
@@ -381,15 +387,15 @@ FixMsgByteWorker.prototype.destroy = function(){
   ByteWorker.prototype.destroy.call(this);
 };
 
-FixMsgByteWorker.prototype.reset = function(){
+TagValueByteWorker.prototype.reset = function(){
   this.tag = '';
   this.value = '';
-  this.fixmsg = new FIXMessage();
+  this.objForFill = new this.objForFillCtor;
   this.zeroCnt = 0;
-  this.fixTagsCnt = 0;
+  this.tagsCnt = 0;
 };
 
-FixMsgByteWorker.prototype.eatByte = function(bufferItem,parser){
+TagValueByteWorker.prototype.eatByte = function(bufferItem,parser){
   this.byteWorker.eatByte(bufferItem,parser,this);
 };
 
@@ -413,20 +419,21 @@ TagByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker){
     if (parentByteWorker.zeroCnt === 0){
       parentByteWorker.tag = parser.bufferHandler.generateNextWord();
       //TODO sanity check.. throw!
-      if (!FIXMessage.fixTagRegexp.test(parentByteWorker.tag)){
+      if (!parentByteWorker.objForFill.fixTagRegexp.test(parentByteWorker.tag)){
         throw new Error('Invalid FIX message structure: tag value ' + parentByteWorker.tag + ' is incorrect');
       }
       console.log('TagByteWorker zavrsio posao i napravio',parentByteWorker.tag,'predaje stafetu ValueByteWorker');
       parentByteWorker.byteWorker.destroy();
       parentByteWorker.byteWorker = new ValueByteWorker(); 
     }else if (parentByteWorker.zeroCnt === 1){
-      console.log('Procitao nulu za kraj fix taga!',parentByteWorker.fixTagsCnt,'prelazi se na sledeci tag',parentByteWorker.fixTagsCnt);
+      console.log('Procitao nulu za kraj fix taga!',parentByteWorker.tagsCnt,'prelazi se na sledeci tag',parentByteWorker.tagsCnt);
       parentByteWorker.zeroCnt++;
-      parentByteWorker.fixTagsCnt++;
+      parentByteWorker.tagsCnt++;
     }else if (parentByteWorker.zeroCnt === 2){
       console.log('Procitao nulu za kraj celog argumenta, prelazi se na sledeci');
-      console.log('OVO CU DA GURNEM U ARGUMENTE',parentByteWorker.fixmsg);
-      parser.reqArguments.push(parentByteWorker.fixmsg);
+      console.log('OVO CU DA GURNEM U ARGUMENTE',parentByteWorker.objForFill);
+      parser.reqArguments.push(parentByteWorker.objForFill);
+      console.log('EVO SU ARGUMENTI :)',parser.reqArguments);
       parser.zeroCnt++;
       parser.byteWorker.reset(); 
     }
@@ -454,15 +461,12 @@ ValueByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker)
     parentByteWorker.zeroCnt++;
     //TODO sanity check.. throw!
     parentByteWorker.value = parser.bufferHandler.generateNextWord();
-    if (!parentByteWorker.value){
-      throw new Error('Invalid FIX message structure: Empty values are not allowed!');
-    }
-    if (!parentByteWorker.fixmsg[parentByteWorker.fixTags[parentByteWorker.fixTagsCnt]]){
+    if (!parentByteWorker.objForFill[parentByteWorker.objForFill.tagsArray[parentByteWorker.tagsCnt]]){
       throw new Error('Invalid FIX message structure: end of request expected, instead got tag/value - { ' + parentByteWorker.tag + ':' + parentByteWorker.value + ' } ');
     }
-    parentByteWorker.fixmsg[parentByteWorker.fixTags[parentByteWorker.fixTagsCnt]][parentByteWorker.tag] = parentByteWorker.value;
+    parentByteWorker.objForFill[parentByteWorker.objForFill.tagsArray[parentByteWorker.tagsCnt]][parentByteWorker.tag] = parentByteWorker.value;
     console.log('ValueByteWorker zavrsio posao i napravio',parentByteWorker.value,'prepusta stefetu TagByteWorker');
-    console.log('=== Takodje je napravio ovo =',parentByteWorker.fixmsg);
+    console.log('=== Takodje je napravio ovo =',parentByteWorker.objForFill);
     parentByteWorker.tag = '';
     parentByteWorker.value = '';
     parentByteWorker.byteWorker.destroy();
@@ -471,17 +475,41 @@ ValueByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker)
 };
 
 function FIXMessage(){
-  this.header = {};
-  this.tags = {};
-  this.trailer = {};
+  this.reset();
   //TODO groups
 };
 
-FIXMessage.fixTagRegexp = /^[1-9][0-9]*$/;
+FIXMessage.prototype.fixTagRegexp = /^[1-9][0-9]*$/;
+
+FIXMessage.prototype.tagsArray = ['header','tags','trailer']; //TODO groups
 
 FIXMessage.prototype.destroy = function(){
   this.tags = null;
   this.header = null;
+  this.trailer = null;
+};
+
+FIXMessage.prototype.reset = function(){
+  this.header = {};
+  this.tags = {};
+  this.trailer = {};
+};
+
+function SessionIDMessage(){
+  this.reset();
+  //TODO groups
+};
+
+SessionIDMessage.prototype.destroy = function(){
+  this.SessionID = null;
+};
+
+SessionIDMessage.prototype.fixTagRegexp = /.*/; //TODO sanity check session id?
+
+SessionIDMessage.prototype.tagsArray = ['SessionID']; //TODO groups
+
+SessionIDMessage.prototype.reset = function(){
+  this.SessionID = {};
 };
 
 module.exports = {

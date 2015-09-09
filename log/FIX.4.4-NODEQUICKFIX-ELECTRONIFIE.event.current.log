@@ -1043,3 +1043,558 @@
 20150909-01:21:39.826 : Initiated logon request
 20150909-01:21:39.827 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
 20150909-01:21:39.827 : Received logon response
+20150909-19:34:34.615 : Created session
+20150909-19:34:34.618 : Connecting to localhost on port 3223
+20150909-19:34:34.619 : Initiated logon request
+20150909-19:34:34.620 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-19:34:34.620 : Received logon response
+20150909-19:34:34.695 : Created session
+20150909-19:34:34.698 : Connecting to localhost on port 3223
+20150909-19:34:34.699 : Initiated logon request
+20150909-19:34:34.766 : Created session
+20150909-19:34:34.768 : Connecting to localhost on port 3223
+20150909-19:34:34.770 : Initiated logon request
+20150909-19:34:34.838 : Created session
+20150909-19:34:34.841 : Connecting to localhost on port 3223
+20150909-19:34:34.841 : Initiated logon request
+20150909-19:34:34.908 : Created session
+20150909-19:34:34.910 : Connecting to localhost on port 3223
+20150909-19:34:34.911 : Initiated logon request
+20150909-19:34:34.978 : Created session
+20150909-19:34:34.980 : Connecting to localhost on port 3223
+20150909-19:34:34.985 : Initiated logon request
+20150909-19:34:35.054 : Created session
+20150909-19:34:35.056 : Connecting to localhost on port 3223
+20150909-19:34:35.058 : Initiated logon request
+20150909-19:34:35.127 : Created session
+20150909-19:34:35.129 : Connecting to localhost on port 3223
+20150909-19:34:35.130 : Initiated logon request
+20150909-19:34:35.198 : Created session
+20150909-19:34:35.200 : Connecting to localhost on port 3223
+20150909-19:34:35.201 : Initiated logon request
+20150909-19:34:35.269 : Created session
+20150909-19:34:35.272 : Connecting to localhost on port 3223
+20150909-19:34:35.274 : Initiated logon request
+20150909-19:34:35.342 : Created session
+20150909-19:34:35.344 : Connecting to localhost on port 3223
+20150909-19:34:35.347 : Initiated logon request
+20150909-19:34:35.414 : Created session
+20150909-19:34:35.417 : Connecting to localhost on port 3223
+20150909-19:34:35.419 : Initiated logon request
+20150909-19:34:35.489 : Created session
+20150909-19:34:35.491 : Connecting to localhost on port 3223
+20150909-19:34:35.494 : Initiated logon request
+20150909-19:34:35.561 : Created session
+20150909-19:34:35.564 : Connecting to localhost on port 3223
+20150909-19:34:35.565 : Initiated logon request
+20150909-19:34:35.632 : Created session
+20150909-19:34:35.634 : Connecting to localhost on port 3223
+20150909-19:34:35.635 : Initiated logon request
+20150909-19:34:35.702 : Created session
+20150909-19:34:35.705 : Connecting to localhost on port 3223
+20150909-19:34:35.707 : Initiated logon request
+20150909-19:34:35.775 : Created session
+20150909-19:34:35.778 : Connecting to localhost on port 3223
+20150909-19:34:35.779 : Initiated logon request
+20150909-19:34:35.845 : Created session
+20150909-19:34:35.848 : Connecting to localhost on port 3223
+20150909-19:34:35.849 : Initiated logon request
+20150909-19:34:35.916 : Created session
+20150909-19:34:35.919 : Connecting to localhost on port 3223
+20150909-19:34:35.921 : Initiated logon request
+20150909-19:34:35.989 : Created session
+20150909-19:34:35.991 : Connecting to localhost on port 3223
+20150909-19:34:35.994 : Initiated logon request
+20150909-19:34:36.062 : Created session
+20150909-19:34:36.065 : Connecting to localhost on port 3223
+20150909-19:34:36.066 : Initiated logon request
+20150909-19:34:36.134 : Created session
+20150909-19:34:36.138 : Connecting to localhost on port 3223
+20150909-19:34:36.139 : Initiated logon request
+20150909-19:34:36.206 : Created session
+20150909-19:34:36.209 : Connecting to localhost on port 3223
+20150909-19:34:36.210 : Initiated logon request
+20150909-19:34:39.699 : Socket Error: Connection reset by peer.
+20150909-19:34:39.699 : Disconnecting
+20150909-19:34:39.771 : Socket Error: Connection reset by peer.
+20150909-19:34:39.771 : Disconnecting
+20150909-19:34:39.842 : Socket Error: Connection reset by peer.
+20150909-19:34:39.842 : Disconnecting
+20150909-19:34:39.912 : Socket Error: Connection reset by peer.
+20150909-19:34:39.912 : Disconnecting
+20150909-19:34:39.986 : Socket Error: Connection reset by peer.
+20150909-19:34:39.986 : Disconnecting
+20150909-19:34:40.058 : Socket Error: Connection reset by peer.
+20150909-19:34:40.058 : Disconnecting
+20150909-19:34:40.130 : Socket Error: Connection reset by peer.
+20150909-19:34:40.130 : Disconnecting
+20150909-19:34:40.201 : Socket Error: Connection reset by peer.
+20150909-19:34:40.201 : Disconnecting
+20150909-19:34:40.275 : Socket Error: Connection reset by peer.
+20150909-19:34:40.275 : Disconnecting
+20150909-19:34:40.347 : Socket Error: Connection reset by peer.
+20150909-19:34:40.347 : Disconnecting
+20150909-19:34:40.420 : Socket Error: Connection reset by peer.
+20150909-19:34:40.420 : Disconnecting
+20150909-19:34:40.494 : Socket Error: Connection reset by peer.
+20150909-19:34:40.494 : Disconnecting
+20150909-19:34:40.566 : Socket Error: Connection reset by peer.
+20150909-19:34:40.566 : Disconnecting
+20150909-19:34:40.635 : Socket Error: Connection reset by peer.
+20150909-19:34:40.635 : Disconnecting
+20150909-19:34:40.707 : Socket Error: Connection reset by peer.
+20150909-19:34:40.708 : Disconnecting
+20150909-19:34:40.779 : Socket Error: Connection reset by peer.
+20150909-19:34:40.779 : Disconnecting
+20150909-19:34:40.849 : Socket Error: Connection reset by peer.
+20150909-19:34:40.849 : Disconnecting
+20150909-19:34:40.922 : Socket Error: Connection reset by peer.
+20150909-19:34:40.922 : Disconnecting
+20150909-19:34:40.995 : Socket Error: Connection reset by peer.
+20150909-19:34:40.995 : Disconnecting
+20150909-19:34:41.067 : Socket Error: Connection reset by peer.
+20150909-19:34:41.067 : Disconnecting
+20150909-19:34:41.139 : Socket Error: Connection reset by peer.
+20150909-19:34:41.139 : Disconnecting
+20150909-19:34:41.211 : Socket Error: Connection reset by peer.
+20150909-19:34:41.211 : Disconnecting
+20150909-19:38:54.618 : Created session
+20150909-19:38:54.621 : Connecting to localhost on port 3223
+20150909-19:38:54.622 : Initiated logon request
+20150909-19:38:54.623 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-19:38:54.623 : Received logon response
+20150909-19:38:54.697 : Created session
+20150909-19:38:54.700 : Connecting to localhost on port 3223
+20150909-19:38:54.700 : Initiated logon request
+20150909-19:38:54.771 : Created session
+20150909-19:38:54.775 : Connecting to localhost on port 3223
+20150909-19:38:54.776 : Initiated logon request
+20150909-19:38:54.843 : Created session
+20150909-19:38:54.845 : Connecting to localhost on port 3223
+20150909-19:38:54.846 : Initiated logon request
+20150909-19:38:54.914 : Created session
+20150909-19:38:54.917 : Connecting to localhost on port 3223
+20150909-19:38:54.918 : Initiated logon request
+20150909-19:38:54.990 : Created session
+20150909-19:38:54.993 : Connecting to localhost on port 3223
+20150909-19:38:54.996 : Initiated logon request
+20150909-19:38:55.063 : Created session
+20150909-19:38:55.066 : Connecting to localhost on port 3223
+20150909-19:38:55.067 : Initiated logon request
+20150909-19:38:55.136 : Created session
+20150909-19:38:55.139 : Connecting to localhost on port 3223
+20150909-19:38:55.140 : Initiated logon request
+20150909-19:38:55.207 : Created session
+20150909-19:38:55.210 : Connecting to localhost on port 3223
+20150909-19:38:55.211 : Initiated logon request
+20150909-19:38:55.282 : Created session
+20150909-19:38:55.284 : Connecting to localhost on port 3223
+20150909-19:38:55.285 : Initiated logon request
+20150909-19:38:55.352 : Created session
+20150909-19:38:55.354 : Connecting to localhost on port 3223
+20150909-19:38:55.357 : Initiated logon request
+20150909-19:38:55.424 : Created session
+20150909-19:38:55.427 : Connecting to localhost on port 3223
+20150909-19:38:55.427 : Initiated logon request
+20150909-19:38:55.494 : Created session
+20150909-19:38:55.496 : Connecting to localhost on port 3223
+20150909-19:38:55.497 : Initiated logon request
+20150909-19:38:55.564 : Created session
+20150909-19:38:55.567 : Connecting to localhost on port 3223
+20150909-19:38:55.568 : Initiated logon request
+20150909-19:38:55.635 : Created session
+20150909-19:38:55.637 : Connecting to localhost on port 3223
+20150909-19:38:55.638 : Initiated logon request
+20150909-19:38:55.704 : Created session
+20150909-19:38:55.707 : Connecting to localhost on port 3223
+20150909-19:38:55.707 : Initiated logon request
+20150909-19:38:55.774 : Created session
+20150909-19:38:55.777 : Connecting to localhost on port 3223
+20150909-19:38:55.778 : Initiated logon request
+20150909-19:38:55.844 : Created session
+20150909-19:38:55.847 : Connecting to localhost on port 3223
+20150909-19:38:55.847 : Initiated logon request
+20150909-19:38:55.914 : Created session
+20150909-19:38:55.917 : Connecting to localhost on port 3223
+20150909-19:38:55.919 : Initiated logon request
+20150909-19:38:55.987 : Created session
+20150909-19:38:55.989 : Connecting to localhost on port 3223
+20150909-19:38:55.991 : Initiated logon request
+20150909-19:38:56.058 : Created session
+20150909-19:38:56.060 : Connecting to localhost on port 3223
+20150909-19:38:56.062 : Initiated logon request
+20150909-19:38:56.129 : Created session
+20150909-19:38:56.133 : Connecting to localhost on port 3223
+20150909-19:38:56.133 : Initiated logon request
+20150909-19:38:56.200 : Created session
+20150909-19:38:56.203 : Connecting to localhost on port 3223
+20150909-19:38:56.204 : Initiated logon request
+20150909-19:38:59.701 : Socket Error: Connection reset by peer.
+20150909-19:38:59.701 : Disconnecting
+20150909-19:38:59.776 : Socket Error: Connection reset by peer.
+20150909-19:38:59.776 : Disconnecting
+20150909-19:38:59.846 : Socket Error: Connection reset by peer.
+20150909-19:38:59.846 : Disconnecting
+20150909-19:38:59.918 : Socket Error: Connection reset by peer.
+20150909-19:38:59.918 : Disconnecting
+20150909-19:38:59.996 : Socket Error: Connection reset by peer.
+20150909-19:38:59.996 : Disconnecting
+20150909-19:39:00.068 : Socket Error: Connection reset by peer.
+20150909-19:39:00.068 : Disconnecting
+20150909-19:39:00.140 : Socket Error: Connection reset by peer.
+20150909-19:39:00.140 : Disconnecting
+20150909-19:39:00.211 : Socket Error: Connection reset by peer.
+20150909-19:39:00.211 : Disconnecting
+20150909-19:39:00.285 : Socket Error: Connection reset by peer.
+20150909-19:39:00.285 : Disconnecting
+20150909-19:39:00.357 : Socket Error: Connection reset by peer.
+20150909-19:39:00.357 : Disconnecting
+20150909-19:39:00.428 : Socket Error: Connection reset by peer.
+20150909-19:39:00.428 : Disconnecting
+20150909-19:39:00.497 : Socket Error: Connection reset by peer.
+20150909-19:39:00.497 : Disconnecting
+20150909-19:39:00.568 : Socket Error: Connection reset by peer.
+20150909-19:39:00.568 : Disconnecting
+20150909-19:39:00.639 : Socket Error: Connection reset by peer.
+20150909-19:39:00.639 : Disconnecting
+20150909-19:39:00.708 : Socket Error: Connection reset by peer.
+20150909-19:39:00.708 : Disconnecting
+20150909-19:39:00.778 : Socket Error: Connection reset by peer.
+20150909-19:39:00.778 : Disconnecting
+20150909-19:39:00.848 : Socket Error: Connection reset by peer.
+20150909-19:39:00.848 : Disconnecting
+20150909-19:39:00.920 : Socket Error: Connection reset by peer.
+20150909-19:39:00.920 : Disconnecting
+20150909-19:39:00.992 : Socket Error: Connection reset by peer.
+20150909-19:39:00.992 : Disconnecting
+20150909-19:39:01.062 : Socket Error: Connection reset by peer.
+20150909-19:39:01.062 : Disconnecting
+20150909-19:39:01.134 : Socket Error: Connection reset by peer.
+20150909-19:39:01.134 : Disconnecting
+20150909-19:39:01.204 : Socket Error: Connection reset by peer.
+20150909-19:39:01.204 : Disconnecting
+20150909-19:42:04.515 : Created session
+20150909-19:42:04.518 : Connecting to localhost on port 3223
+20150909-19:42:04.519 : Initiated logon request
+20150909-19:42:04.520 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-19:42:04.520 : Received logon response
+20150909-19:42:04.595 : Created session
+20150909-19:42:04.597 : Connecting to localhost on port 3223
+20150909-19:42:04.598 : Initiated logon request
+20150909-19:42:04.668 : Created session
+20150909-19:42:04.671 : Connecting to localhost on port 3223
+20150909-19:42:04.672 : Initiated logon request
+20150909-19:42:04.738 : Created session
+20150909-19:42:04.740 : Connecting to localhost on port 3223
+20150909-19:42:04.741 : Initiated logon request
+20150909-19:42:04.807 : Created session
+20150909-19:42:04.810 : Connecting to localhost on port 3223
+20150909-19:42:04.812 : Initiated logon request
+20150909-19:42:04.879 : Created session
+20150909-19:42:04.881 : Connecting to localhost on port 3223
+20150909-19:42:04.884 : Initiated logon request
+20150909-19:42:04.951 : Created session
+20150909-19:42:04.953 : Connecting to localhost on port 3223
+20150909-19:42:04.955 : Initiated logon request
+20150909-19:42:05.030 : Created session
+20150909-19:42:05.032 : Connecting to localhost on port 3223
+20150909-19:42:05.033 : Initiated logon request
+20150909-19:42:05.099 : Created session
+20150909-19:42:05.102 : Connecting to localhost on port 3223
+20150909-19:42:05.103 : Initiated logon request
+20150909-19:42:05.169 : Created session
+20150909-19:42:05.171 : Connecting to localhost on port 3223
+20150909-19:42:05.172 : Initiated logon request
+20150909-19:42:05.239 : Created session
+20150909-19:42:05.242 : Connecting to localhost on port 3223
+20150909-19:42:05.242 : Initiated logon request
+20150909-19:42:05.309 : Created session
+20150909-19:42:05.311 : Connecting to localhost on port 3223
+20150909-19:42:05.314 : Initiated logon request
+20150909-19:42:05.380 : Created session
+20150909-19:42:05.383 : Connecting to localhost on port 3223
+20150909-19:42:05.383 : Initiated logon request
+20150909-19:42:05.450 : Created session
+20150909-19:42:05.453 : Connecting to localhost on port 3223
+20150909-19:42:05.454 : Initiated logon request
+20150909-19:42:05.521 : Created session
+20150909-19:42:05.523 : Connecting to localhost on port 3223
+20150909-19:42:05.524 : Initiated logon request
+20150909-19:42:05.591 : Created session
+20150909-19:42:05.593 : Connecting to localhost on port 3223
+20150909-19:42:05.594 : Initiated logon request
+20150909-19:42:05.661 : Created session
+20150909-19:42:05.664 : Connecting to localhost on port 3223
+20150909-19:42:05.665 : Initiated logon request
+20150909-19:42:05.731 : Created session
+20150909-19:42:05.734 : Connecting to localhost on port 3223
+20150909-19:42:05.734 : Initiated logon request
+20150909-19:42:05.801 : Created session
+20150909-19:42:05.803 : Connecting to localhost on port 3223
+20150909-19:42:05.804 : Initiated logon request
+20150909-19:42:05.870 : Created session
+20150909-19:42:05.873 : Connecting to localhost on port 3223
+20150909-19:42:05.873 : Initiated logon request
+20150909-19:42:05.940 : Created session
+20150909-19:42:05.942 : Connecting to localhost on port 3223
+20150909-19:42:05.943 : Initiated logon request
+20150909-19:42:06.011 : Created session
+20150909-19:42:06.014 : Connecting to localhost on port 3223
+20150909-19:42:06.015 : Initiated logon request
+20150909-19:42:06.082 : Created session
+20150909-19:42:06.085 : Connecting to localhost on port 3223
+20150909-19:42:06.086 : Initiated logon request
+20150909-19:42:09.598 : Socket Error: Connection reset by peer.
+20150909-19:42:09.598 : Disconnecting
+20150909-19:42:09.673 : Socket Error: Connection reset by peer.
+20150909-19:42:09.673 : Disconnecting
+20150909-19:42:09.741 : Socket Error: Connection reset by peer.
+20150909-19:42:09.741 : Disconnecting
+20150909-19:42:09.813 : Socket Error: Connection reset by peer.
+20150909-19:42:09.813 : Disconnecting
+20150909-19:42:09.884 : Socket Error: Connection reset by peer.
+20150909-19:42:09.884 : Disconnecting
+20150909-19:42:09.955 : Socket Error: Connection reset by peer.
+20150909-19:42:09.955 : Disconnecting
+20150909-19:42:10.033 : Socket Error: Connection reset by peer.
+20150909-19:42:10.033 : Disconnecting
+20150909-19:42:10.103 : Socket Error: Connection reset by peer.
+20150909-19:42:10.103 : Disconnecting
+20150909-19:42:10.173 : Socket Error: Connection reset by peer.
+20150909-19:42:10.173 : Disconnecting
+20150909-19:42:10.243 : Socket Error: Connection reset by peer.
+20150909-19:42:10.243 : Disconnecting
+20150909-19:42:10.314 : Socket Error: Connection reset by peer.
+20150909-19:42:10.314 : Disconnecting
+20150909-19:42:10.384 : Socket Error: Connection reset by peer.
+20150909-19:42:10.384 : Disconnecting
+20150909-19:42:10.454 : Socket Error: Connection reset by peer.
+20150909-19:42:10.454 : Disconnecting
+20150909-19:42:10.524 : Socket Error: Connection reset by peer.
+20150909-19:42:10.524 : Disconnecting
+20150909-19:42:10.594 : Socket Error: Connection reset by peer.
+20150909-19:42:10.594 : Disconnecting
+20150909-19:42:10.665 : Socket Error: Connection reset by peer.
+20150909-19:42:10.665 : Disconnecting
+20150909-19:42:10.735 : Socket Error: Connection reset by peer.
+20150909-19:42:10.735 : Disconnecting
+20150909-19:44:28.050 : Created session
+20150909-19:44:28.053 : Connecting to localhost on port 3223
+20150909-19:44:28.054 : Initiated logon request
+20150909-19:44:28.055 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-19:44:28.055 : Received logon response
+20150909-19:45:00.013 : Created session
+20150909-19:45:00.015 : Connecting to localhost on port 3223
+20150909-19:45:00.017 : Initiated logon request
+20150909-19:45:00.017 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-19:45:00.017 : Received logon response
+20150909-19:46:28.015 : Created session
+20150909-19:46:28.018 : Connecting to localhost on port 3223
+20150909-19:46:28.019 : Initiated logon request
+20150909-19:46:28.020 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-19:46:28.020 : Received logon response
+20150909-19:47:59.764 : Created session
+20150909-19:47:59.767 : Connecting to localhost on port 3223
+20150909-19:47:59.768 : Initiated logon request
+20150909-19:47:59.769 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-19:47:59.769 : Received logon response
+20150909-19:48:11.582 : Created session
+20150909-19:48:11.585 : Connecting to localhost on port 3223
+20150909-19:48:11.586 : Initiated logon request
+20150909-19:48:11.587 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-19:48:11.587 : Received logon response
+20150909-19:49:53.128 : Created session
+20150909-19:49:53.131 : Connecting to localhost on port 3223
+20150909-19:49:53.132 : Initiated logon request
+20150909-19:49:53.133 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-19:49:53.133 : Received logon response
+20150909-19:58:29.592 : Created session
+20150909-19:58:29.595 : Connecting to localhost on port 3223
+20150909-19:58:29.596 : Initiated logon request
+20150909-19:58:29.597 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-19:58:29.597 : Received logon response
+20150909-20:00:59.418 : Created session
+20150909-20:00:59.421 : Connecting to localhost on port 3223
+20150909-20:00:59.422 : Initiated logon request
+20150909-20:00:59.423 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-20:00:59.423 : Received logon response
+20150909-20:02:57.163 : Created session
+20150909-20:02:57.166 : Connecting to localhost on port 3223
+20150909-20:02:57.167 : Initiated logon request
+20150909-20:02:57.168 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-20:02:57.168 : Received logon response
+20150909-20:03:50.621 : Created session
+20150909-20:03:50.624 : Connecting to localhost on port 3223
+20150909-20:03:50.625 : Initiated logon request
+20150909-20:03:50.625 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-20:03:50.626 : Received logon response
+20150909-20:05:29.194 : Created session
+20150909-20:05:29.197 : Connecting to localhost on port 3223
+20150909-20:05:29.198 : Initiated logon request
+20150909-20:05:29.198 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-20:05:29.198 : Received logon response
+20150909-20:05:47.984 : Created session
+20150909-20:05:47.987 : Connecting to localhost on port 3223
+20150909-20:05:47.988 : Initiated logon request
+20150909-20:05:47.989 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-20:05:47.989 : Received logon response
+20150909-20:22:06.404 : Created session
+20150909-20:22:06.407 : Connecting to localhost on port 3223
+20150909-20:22:06.408 : Initiated logon request
+20150909-20:22:06.408 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-20:22:06.408 : Received logon response
+20150909-20:37:30.691 : Created session
+20150909-20:37:30.694 : Connecting to localhost on port 3223
+20150909-20:37:30.695 : Initiated logon request
+20150909-20:37:30.696 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-20:37:30.696 : Received logon response
+20150909-20:37:42.320 : Created session
+20150909-20:37:42.323 : Connecting to localhost on port 3223
+20150909-20:37:42.324 : Initiated logon request
+20150909-20:37:42.325 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-20:37:42.325 : Received logon response
+20150909-20:38:19.622 : Created session
+20150909-20:38:19.625 : Connecting to localhost on port 3223
+20150909-20:38:19.627 : Initiated logon request
+20150909-20:38:19.627 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-20:38:19.627 : Received logon response
+20150909-20:49:29.904 : Created session
+20150909-20:49:29.907 : Connecting to localhost on port 3223
+20150909-20:49:29.908 : Initiated logon request
+20150909-20:49:29.908 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-20:49:29.908 : Received logon response
+20150909-20:50:18.779 : Created session
+20150909-20:50:18.783 : Connecting to localhost on port 3223
+20150909-20:50:18.785 : Initiated logon request
+20150909-20:50:18.786 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-20:50:18.786 : Received logon response
+20150909-21:10:24.214 : Created session
+20150909-21:10:24.217 : Connecting to localhost on port 3223
+20150909-21:10:24.218 : Initiated logon request
+20150909-21:10:24.219 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:10:24.219 : Received logon response
+20150909-21:11:45.446 : Created session
+20150909-21:11:45.448 : Connecting to localhost on port 3223
+20150909-21:11:45.449 : Initiated logon request
+20150909-21:11:45.450 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:11:45.450 : Received logon response
+20150909-21:12:03.997 : Created session
+20150909-21:12:04.000 : Connecting to localhost on port 3223
+20150909-21:12:04.001 : Initiated logon request
+20150909-21:12:04.002 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:12:04.002 : Received logon response
+20150909-21:12:52.646 : Created session
+20150909-21:12:52.649 : Connecting to localhost on port 3223
+20150909-21:12:52.650 : Initiated logon request
+20150909-21:12:52.650 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:12:52.650 : Received logon response
+20150909-21:16:00.802 : Created session
+20150909-21:16:00.805 : Connecting to localhost on port 3223
+20150909-21:16:00.806 : Initiated logon request
+20150909-21:16:00.808 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:16:00.808 : Received logon response
+20150909-21:21:10.069 : Created session
+20150909-21:21:10.072 : Connecting to localhost on port 3223
+20150909-21:21:10.074 : Initiated logon request
+20150909-21:21:10.074 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:21:10.074 : Received logon response
+20150909-21:21:35.060 : Created session
+20150909-21:21:35.063 : Connecting to localhost on port 3223
+20150909-21:21:35.064 : Initiated logon request
+20150909-21:21:35.065 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:21:35.065 : Received logon response
+20150909-21:24:13.941 : Created session
+20150909-21:24:13.946 : Connecting to localhost on port 3223
+20150909-21:24:13.947 : Initiated logon request
+20150909-21:24:13.948 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:24:13.948 : Received logon response
+20150909-21:45:43.519 : Created session
+20150909-21:45:43.522 : Connecting to localhost on port 3223
+20150909-21:45:43.523 : Initiated logon request
+20150909-21:45:43.523 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:45:43.523 : Received logon response
+20150909-21:48:51.966 : Created session
+20150909-21:48:51.969 : Connecting to localhost on port 3223
+20150909-21:48:51.970 : Initiated logon request
+20150909-21:48:51.971 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:48:51.971 : Received logon response
+20150909-21:50:47.145 : Created session
+20150909-21:50:47.148 : Connecting to localhost on port 3223
+20150909-21:50:47.149 : Initiated logon request
+20150909-21:50:47.150 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:50:47.150 : Received logon response
+20150909-21:53:47.200 : Created session
+20150909-21:53:47.203 : Connecting to localhost on port 3223
+20150909-21:53:47.204 : Initiated logon request
+20150909-21:53:47.204 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:53:47.204 : Received logon response
+20150909-21:54:16.163 : Created session
+20150909-21:54:16.166 : Connecting to localhost on port 3223
+20150909-21:54:16.167 : Initiated logon request
+20150909-21:54:16.168 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:54:16.168 : Received logon response
+20150909-21:55:30.392 : Created session
+20150909-21:55:30.395 : Connecting to localhost on port 3223
+20150909-21:55:30.396 : Initiated logon request
+20150909-21:55:30.397 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:55:30.397 : Received logon response
+20150909-21:56:49.602 : Created session
+20150909-21:56:49.605 : Connecting to localhost on port 3223
+20150909-21:56:49.606 : Initiated logon request
+20150909-21:56:49.608 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:56:49.608 : Received logon response
+20150909-21:57:01.466 : Created session
+20150909-21:57:01.469 : Connecting to localhost on port 3223
+20150909-21:57:01.470 : Initiated logon request
+20150909-21:57:01.471 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:57:01.471 : Received logon response
+20150909-21:58:24.092 : Created session
+20150909-21:58:24.095 : Connecting to localhost on port 3223
+20150909-21:58:24.096 : Initiated logon request
+20150909-21:58:24.097 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-21:58:24.097 : Received logon response
+20150909-22:05:06.020 : Created session
+20150909-22:05:06.023 : Connecting to localhost on port 3223
+20150909-22:05:06.024 : Initiated logon request
+20150909-22:05:06.025 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-22:05:06.025 : Received logon response
+20150909-22:10:12.121 : Created session
+20150909-22:10:12.124 : Connecting to localhost on port 3223
+20150909-22:10:12.125 : Initiated logon request
+20150909-22:10:12.126 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-22:10:12.126 : Received logon response
+20150909-22:10:48.002 : Created session
+20150909-22:10:48.005 : Connecting to localhost on port 3223
+20150909-22:10:48.006 : Initiated logon request
+20150909-22:10:48.007 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-22:10:48.007 : Received logon response
+20150909-22:11:23.957 : Created session
+20150909-22:11:23.960 : Connecting to localhost on port 3223
+20150909-22:11:23.961 : Initiated logon request
+20150909-22:11:23.962 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-22:11:23.962 : Received logon response
+20150909-22:13:14.688 : Created session
+20150909-22:13:14.691 : Connecting to localhost on port 3223
+20150909-22:13:14.692 : Initiated logon request
+20150909-22:13:14.693 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-22:13:14.693 : Received logon response
+20150909-22:14:46.844 : Created session
+20150909-22:14:46.847 : Connecting to localhost on port 3223
+20150909-22:14:46.848 : Initiated logon request
+20150909-22:14:46.849 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-22:14:46.849 : Received logon response
+20150909-22:15:03.666 : Created session
+20150909-22:15:03.669 : Connecting to localhost on port 3223
+20150909-22:15:03.670 : Initiated logon request
+20150909-22:15:03.670 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-22:15:03.670 : Received logon response
+20150909-22:16:01.371 : Created session
+20150909-22:16:01.374 : Connecting to localhost on port 3223
+20150909-22:16:01.376 : Initiated logon request
+20150909-22:16:01.376 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-22:16:01.376 : Received logon response
+20150909-22:16:26.748 : Created session
+20150909-22:16:26.751 : Connecting to localhost on port 3223
+20150909-22:16:26.752 : Initiated logon request
+20150909-22:16:26.753 : Logon contains ResetSeqNumFlag=Y, reseting sequence numbers to 1
+20150909-22:16:26.753 : Received logon response

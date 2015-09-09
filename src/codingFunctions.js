@@ -5,13 +5,15 @@ function Coder(){
   this.codedTagRegexp = /^t[1-9][0-9]*$/;
   //Struct name - header, tags, groups , trailer. TODO more?
   //TODO support groups tag
-  this.structNames = ['header','tags','trailer'];
+  this.fixStructNames = ['header','tags','trailer'];
+  this.sessionIdStructNames = ['sessionID'];
 }
 
 Coder.prototype.destroy = function(){
   this.decodedTagRegexp = null;
   this.codedTagRegexp = null;
-  this.structNames = null;
+  this.fixStructNames = null;
+  this.sessionIdStructNames = null;
 };
 
 //Getters/Setters
@@ -31,7 +33,7 @@ Coder.prototype.decodeFIXmessage = function(codedElement){
   //TODO testing for missing properties, for example no tags property
   //TODO support groups tag - forEach will not work because groups tag is different
   try{
-    this.structNames.forEach(this.decodeFIXstruct.bind(this,codedElement,decodedResult));
+    this.fixStructNames.forEach(this.decodeFIXstruct.bind(this,codedElement,decodedResult));
   }catch (err){
     console.log('Error in decoding message - ',err);
     return undefined;
@@ -44,7 +46,7 @@ Coder.prototype.codeFIXmessage = function(decodedElement){
   //TODO testing for missing properties, for example no tags property
   //TODO support groups tag - forEach will not work because groups tag is different
   try{
-    this.structNames.forEach(this.codeFIXstruct.bind(this,decodedElement,codedResult));
+    this.fixStructNames.forEach(this.codeFIXstruct.bind(this,decodedElement,codedResult));
   }catch (err){
     console.log('Error in decoding message - ',err);
     return undefined;
@@ -52,11 +54,19 @@ Coder.prototype.codeFIXmessage = function(decodedElement){
   return codedResult;
 };
 
-Coder.prototype.createZeroDelimitedString = function(obj){
-  var result = {value: ''};
-  this.structNames.forEach(this.generatePerProperty.bind(this,obj,result));
-  return result.value;
+Coder.prototype.createZeroDelimitedSessionId = function(obj){
+  return this.createZeroDelimitedString(obj,this.sessionIdStructNames);
 };
+
+Coder.prototype.createZeroDelimitedFixMsg = function(obj){
+  return this.createZeroDelimitedString(obj,this.fixStructNames);
+};
+
+Coder.prototype.createZeroDelimitedString = function(obj,structNames){
+  var result = {value: ''};
+  structNames.forEach(this.generatePerProperty.bind(this,obj,result));
+  return result.value;
+}
 
 Coder.prototype.generatePerProperty = function(obj,result,structName){
   if (obj.hasOwnProperty(structName)){
@@ -84,7 +94,7 @@ Coder.prototype.generateZeroDelimitedTagValue = function(obj){
 //Intern coding functions
 
 Coder.prototype.codeFIXstruct = function(decodedElement,codedResult,structName){
-  if (this.structNames.indexOf(structName) === -1){
+  if (this.fixStructNames.indexOf(structName) === -1){
     throw new Error(structName + ' is invalid struct name');
   }
   if (!decodedElement.hasOwnProperty(structName)){
@@ -98,7 +108,7 @@ Coder.prototype.codeFIXstruct = function(decodedElement,codedResult,structName){
 };
 
 Coder.prototype.decodeFIXstruct = function(codedElement,decodedResult,structName){
-  if (this.structNames.indexOf(structName) === -1){
+  if (this.fixStructNames.indexOf(structName) === -1){
     throw new Error(structName + ' is invalid struct name');
   }
   if (!codedElement.hasOwnProperty(structName)){

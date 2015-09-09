@@ -105,10 +105,7 @@ CarpetConnectionHandler.prototype.socketWriteCredentials = function(name,passwor
   if (!Buffer.isBuffer(password)){
     throw new Error('socketWriteCredentials: accepts buffer as argument');
   }
-  var msg1 = this.makeWriteBuffer(name,'c',true);
-  var msg2 = this.makeWriteBuffer(password,'',true);
-  var msg = Buffer.concat([msg1,msg2]);
-  console.log('==== STA JE MSG POSLE CONCAT?',msg);
+  var msg = this.makeWriteBufferArray([name,password],'c');
   this.socket.write(msg);
 };
 
@@ -152,7 +149,7 @@ PlainConnectionHandler.prototype.executeOnReadingFinished = function(){
 //SecretConnectionHandler
 
 function SecretConnectionHandler(socket,buffer,myTcpParent,secret){
-  ConnectionHandler.call(this,socket,buffer,myTcpParent,new Parsers.ApplicationParser());
+  ConnectionHandler.call(this,socket,buffer,myTcpParent,new Parsers.ApplicationParser(new ServerEventHandler(),this));
   this.socketWriteSecret(secret);
 };
 
@@ -200,13 +197,11 @@ SecretConnectionHandler.prototype.executeOnReadingFinished = function(){
       if (!!this.executor){
         this.executor.destroy();
       }
-      this.executor = new FixSenderExecutor(this);
+      this.executor = new FixMsgExecutor(this);
       this.myTcpParent.events.emit('fixInitiatorStarted');
       break; 
   }
-  var fixMsg = this.parser.getFixMsg();
-  console.log('!=!=!=!=!=!=!=! DOBIO SAM OVU FIX PORUKU SA SERVERA',fixMsg);
-  this.parser.reset();
+  this.parser.callMethod(this);
 };
 
 //Executor
@@ -293,23 +288,23 @@ FixInitiatorExecutor.prototype.sendFIXInitiatorSettings = function(settings){
   this.handler.sendMethodBuffer(new Buffer(settings),new Buffer('startFixInitiator'));
 };
 
-//FixSenderExecutor
+//FixMsgExecutor
 
-function FixSenderExecutor(handler){
+function FixMsgExecutor(handler){
   Executor.call(this,handler);
 }
 
-FixSenderExecutor.prototype = Object.create(Executor.prototype, {constructor:{
-  value: FixSenderExecutor,
+FixMsgExecutor.prototype = Object.create(Executor.prototype, {constructor:{
+  value: FixMsgExecutor,
   enumerable: false,
   writable: false
 }});
 
-FixSenderExecutor.prototype.destroy = function(){
+FixMsgExecutor.prototype.destroy = function(){
   Executor.prototype.destroy.call(this);
 };
 
-FixSenderExecutor.prototype.sendFIXMessage = function(fixMsg){
+FixMsgExecutor.prototype.sendFIXMessage = function(fixMsg){
   if (!fixMsg){
     throw new Error('sendFixMsg: fixMsg param is required');
   };
@@ -319,30 +314,53 @@ FixSenderExecutor.prototype.sendFIXMessage = function(fixMsg){
   if (!fixMsg.hasOwnProperty('header')){
     throw new Error('sendFIXMessage: fixMsg param must contain property header');
   }
-  var header = this.generateZeroDelimitedTagValue(fixMsg.header);
-  var tags = '';
-  if (fixMsg.hasOwnProperty('tags')){
-    tags = this.generateZeroDelimitedTagValue(fixMsg.tags);
-  }
-  var codedFixMsg = Coder.createZeroDelimitedString(fixMsg);
+  var codedFixMsg = Coder.createZeroDelimitedFixMsg(fixMsg);
   this.handler.sendMethodBuffer(new Buffer(codedFixMsg),new Buffer('sendFixMsg'));
 };
 
-FixSenderExecutor.prototype.generateZeroDelimitedTagValue = function(obj){
-  var res = '';
-  if (!obj){
-    return res;
+//ServerEventHandler
+
+function acceptFixMsg(args){
+  if (!(args instanceof Array)){
+    throw new Error('sendFixMsg accepts array of params');
   }
-  if (typeof obj !== 'object'){
-    return res;
+  if (args.length !== 1){
+    throw new Error('sendFixMsg requires exactly 1 param');
   }
-  for (var key in obj){
-    if (obj.hasOwnProperty(key)){
-      res += (key + String.fromCharCode(0) + obj[key] + String.fromCharCode(0));
-    }
+  var msg = args[0];
+  if (typeof msg !== 'object'){
+    throw new Error('sendFixMsg requires object as the first param! - ' + msg);
   }
-  res += String.fromCharCode(0);
-  return res;
+  console.log('!=!=!=!=****!=!=!=! DOBIO SAM OVU FIX PORUKU SA SERVERA',msg);
+}
+
+function connectionEstablished(args){
+  if (!(args instanceof Array)){
+    throw new Error('connectionEstablished accepts array of params');
+  }
+  if (args.length !== 1){
+    throw new Error('connectionEstablished requires exactly 1 param');
+  }
+  var sessionID = args[0];
+  if (typeof sessionID !== 'object'){
+    throw new Error('connectionEstablished requires object as the first param! - ' + sessionID);
+  }
+  console.log('VEZA USPOSTAVLJENA!',sessionID);
+  if (!!this.myTcpParent){ //suppose we are binding connectionHandler as a context
+    this.myTcpParent.events.emit('fixConnectionEstablished');
+    console.log('OPALIO EVENT connectionEstablished!!!!');
+  }
+}
+
+//Never put methods in prototype because of security reasons (not working ofc)
+//Also, these functions are not supposed to be binded, because the caller will bind context
+function ServerEventHandler(handler){
+  this.acceptFixMsg = acceptFixMsg;
+  this.connectionEstablished = connectionEstablished;
+}
+
+ServerEventHandler.prototype.destroy = function(){
 };
+
 
 module.exports = tcpClient;
