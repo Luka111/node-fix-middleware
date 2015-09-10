@@ -149,6 +149,10 @@ ConnectionHandler.prototype.socketWriteResult = function(msg){
     throw new Error('socketWriteResult: accepts buffer as argument');
   }
   this.socket.write(this.makeWriteBuffer(msg,'r',true));
+  if (!!this.myTcpParent.executingMethod){
+    console.log('^^^^^ IZVRSENA METODA');
+    this.myTcpParent.executingMethod = false;
+  }
 };
 
 ConnectionHandler.prototype.socketWriteNotification = function(msg){

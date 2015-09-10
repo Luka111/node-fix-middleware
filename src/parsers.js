@@ -101,9 +101,8 @@ SessionParser.prototype.getSecret = function(){
   return this.secret;
 };
 
-function RequestParser(methods, connHandler){ // Connection handler is needed for notifying client
-  this.connHandler = connHandler;
-  this.methods = methods;
+function RequestParser(myTcpParent){ // Connection handler is needed for notifying client
+  this.myTcpParent = myTcpParent;
   this.reset();
   IdleParser.call(this);
 }
@@ -125,8 +124,7 @@ RequestParser.prototype.destroy = function(){
   this.zeroCnt = null;
   this.reqArguments = null;
   this.operationName = null; 
-  this.methods = null;
-  this.connHandler = null;
+  this.myTcpParent = null;
   IdleParser.prototype.destroy.call(this);
 };
 
@@ -150,14 +148,20 @@ RequestParser.prototype.argumentByteWorkerFactory = function(operationName){
       this.reqArguments.push(this.fixInitiatorSuccessfullyStarted.bind(this));
       return new StringByteWorker();
     case 'sendFixMsg':
+      this.reqArguments.push(this.fixMsgSuccessfullySent.bind(this));
       return new TagValueByteWorker(FIXMessage);
   };
   throw new Error('Server does not implement ' + operationName + ' method');
 };
 
+RequestParser.prototype.fixMsgSuccessfullySent = function(){
+  console.log('%%%%% FIX poruka je uspesno poslata i obavestavam clienta o tome!');
+  this.myTcpParent.connectionHandler.socketWriteResult(new Buffer('successfully_sent'));
+};
+
 RequestParser.prototype.fixInitiatorSuccessfullyStarted = function(){
   console.log('%%%%% FIX initiator se startovao i obavestio clienta o tome!');
-  this.connHandler.socketWriteResult(new Buffer('fix_initiator_started'));
+  this.myTcpParent.connectionHandler.socketWriteResult(new Buffer('fix_initiator_started'));
 };
 
 RequestParser.prototype.execute = function(bufferItem){
@@ -176,18 +180,18 @@ RequestParser.prototype.zeroCntEqualsRequiredZeros = function(){
   return this.zeroCnt === this.requiredZeros;
 };
 
-RequestParser.prototype.callMethod = function(context){
+RequestParser.prototype.callMethod = function(){
   if (!!this.operationName){
     console.log('FINISHED reading arguments for',this.operationName,'method. Calling it...',this.reqArguments);
-    this.methods[this.operationName].call(context,this.reqArguments);
+    this.myTcpParent.callMethod(this.operationName,this.reqArguments);
   }
   this.reset();
 };
 
 //Application parser for TCP client
 
-function ApplicationParser(methods, connHandler){
-  RequestParser.call(this,methods,connHandler);
+function ApplicationParser(myTcpParent){
+  RequestParser.call(this,myTcpParent);
 }
 
 ApplicationParser.prototype = Object.create(RequestParser.prototype, {constructor:{
@@ -317,9 +321,9 @@ MethodByteWorker.prototype.eatByte = function(bufferItem,parser){
     parser.zeroCnt++;
     parser.operationName = parser.bufferHandler.generateNextWord();
     console.log('STA JE PARSER',parser);
-    if (parser.methods.hasOwnProperty(parser.operationName)){
-      console.log('METHOD',parser.operationName,'exists and requires',parser.methods[parser.operationName].length,'params');
-      parser.requiredZeros += parser.methods[parser.operationName].length;
+    if (parser.myTcpParent.methods.isImplemented(parser.operationName)){
+      console.log('METHOD',parser.operationName,'exists and requires',parser.myTcpParent.methods.getParamCnt(parser.operationName),'params');
+      parser.requiredZeros += parser.myTcpParent.methods.getParamCnt(parser.operationName);
       parser.byteWorker.destroy();
       parser.byteWorker = parser.argumentByteWorkerFactory(parser.operationName);
     }else{

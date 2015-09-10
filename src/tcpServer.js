@@ -8,17 +8,26 @@ var ConnectionHandler = require('./connectionHandler.js');
 var Listeners = require('./listeners.js');
 var Parsers = require('./parsers.js');
 var Coder = require('./codingFunctions.js');
+var MethodStore = require('./methodStore.js');
 
 function ServerMethods(){
   this.startFixInitiator = null;
   this.sendFixMsg = null;
   this.getStatistics = null;
+  MethodStore.call(this);
 }
+
+ServerMethods.prototype = Object.create(MethodStore.prototype, {constructor:{
+  value: ServerMethods,
+  enumerable: false,
+  writable: false
+}});
 
 ServerMethods.prototype.destroy = function(){
   this.getStatistics = null;
   this.sendFixMsg = null;
   this.startFixInitiator = null;
+  MethodStore.prototype.destroy.call(this);
 };
 
 function tcpFixServer(){
@@ -33,9 +42,11 @@ function tcpFixServer(){
   this.listeners.onLogout = this.onLogoutListener.bind(this,'INITIATOR');
   this.listeners.fromApp = this.fromAppListener.bind(this,'INITIATOR');
   this.connectionHandler = null;
+  this.executingMethod = false;
 };
 
 tcpFixServer.prototype.destroy = function(){
+  this.executingMethod = null;
   this.connectionHandler = null;
   this.listeners.destroy();
   this.listeners = null;
@@ -47,6 +58,71 @@ tcpFixServer.prototype.destroy = function(){
   this.server = null;
   this.methods.destroy();
   this.methods = null;
+};
+
+tcpFixServer.prototype.callMethod = function(methodName,reqArguments){
+  if (this.executingMethod){
+    this.connectionHandler.socketWriteError(new Buffer('executing_method'));
+    return;
+  }
+  console.log('^^^^^ METODA JE U TOKU');
+  this.executingMethod = true;
+  this.methods.callMethod(methodName,reqArguments);
+}
+
+//RMI
+
+tcpFixServer.prototype.startFixInitiator = function(args){
+  if (!(args instanceof Array)){
+    throw 'startFixInitiator accepts array of params';
+  }
+  if (args.length !== 2){
+    throw 'startFixInitiator requires exactly 2 params - cb and settings';
+  }
+  var cb = args[0];
+  if (typeof cb !== 'function'){
+    throw 'startFixInitiator requires function as the first param!';
+  }
+  var settings = args[1];
+  if (typeof settings !== 'string'){
+    throw 'startFixInitiator requires string as the second param!';
+  }
+  //TODO ovde mora ozbiljan sanity check za ovaj string, jer quickfix puca ako se da los settings string
+  this.fixInitiator = new fixInitiator(settings);
+  this.fixInitiator.start(cb);
+  this.fixInitiator.registerEventListeners(this.listeners);
+};
+
+tcpFixServer.prototype.sendFixMsg = function(args){
+  if (!(args instanceof Array)){
+    throw new Error('sendFixMsg accepts array of params');
+  }
+  if (args.length !== 2){
+    throw new Error('sendFixMsg requires exactly 2 params - cb and fixMsg');
+  }
+  var cb = args[0];
+  if (typeof cb !== 'function'){
+    throw 'sendFixMsg requires function as the first param!';
+  }
+  var msg = args[1];
+  if (typeof msg !== 'object'){
+    throw new Error('sendFixMsg requires object as the second param! - ' + msg);
+  }
+  //TODO ovde mora ozbiljan sanity check za fix msg, jer quickfix puca ako se da losa poruka 
+  if (!this.fixInitiator){
+    throw new Error('FIX initiator is not started!');
+  }
+  this.sendCheckedMsg(cb,msg);
+};
+
+tcpFixServer.prototype.sendCheckedMsg = function(cb,msg){
+  try{
+    this.fixInitiator.send(cb,msg);
+  }catch(err){
+    console.log('ERROR from FIX initiator:',err);
+    console.log('Resending msg in 5sec...',msg);
+    setTimeout(this.sendCheckedMsg.bind(this,cb,msg),5000);
+  }
 };
 
 //Overridden FIX listeners
@@ -78,57 +154,6 @@ tcpFixServer.prototype.fromAppListener = function(emitter,msg,sessionID){
 
 tcpFixServer.prototype.start = function(port){
   this.server.listen(port,this.onListening.bind(this));
-};
-
-//RMI
-
-tcpFixServer.prototype.startFixInitiator = function(args){
-  if (!(args instanceof Array)){
-    throw 'startFixInitiator accepts array of params';
-  }
-  if (args.length !== 2){
-    throw 'startFixInitiator requires exactly 2 params - cb and settings';
-  }
-  var cb = args[0];
-  if (typeof cb !== 'function'){
-    throw 'startFixInitiator requires function as the first param!';
-  }
-  var settings = args[1];
-  if (typeof settings !== 'string'){
-    throw 'startFixInitiator requires string as the second param!';
-  }
-  //TODO ovde mora ozbiljan sanity check za ovaj string, jer quickfix puca ako se da los settings string
-  this.fixInitiator = new fixInitiator(settings);
-  this.fixInitiator.start(cb);
-  this.fixInitiator.registerEventListeners(this.listeners);
-};
-
-tcpFixServer.prototype.sendFixMsg = function(args){
-  if (!(args instanceof Array)){
-    throw new Error('sendFixMsg accepts array of params');
-  }
-  if (args.length !== 1){
-    throw new Error('sendFixMsg requires exactly 1 param');
-  }
-  var msg = args[0];
-  if (typeof msg !== 'object'){
-    throw new Error('sendFixMsg requires object as the first param! - ' + msg);
-  }
-  //TODO ovde mora ozbiljan sanity check za fix msg, jer quickfix puca ako se da losa poruka 
-  if (!this.fixInitiator){
-    throw new Error('FIX initiator is not started!');
-  }
-  this.sendCheckedMsg(msg);
-};
-
-tcpFixServer.prototype.sendCheckedMsg = function(msg){
-  try{
-    this.fixInitiator.send(msg);
-  }catch(err){
-    console.log('ERROR from FIX initiator:',err);
-    console.log('Resending msg in 5sec...',msg);
-    setTimeout(this.sendCheckedMsg.bind(this,msg),5000);
-  }
 };
 
 //Event listeners
@@ -290,7 +315,7 @@ SessionHandler.prototype.executeOnReadingFinished = function(buffer){
 
 function RequestHandler(socket, buffer, myTcpParent) {
   console.log('new Request handler');
-  ConnectionHandler.call(this, socket, buffer, myTcpParent, new Parsers.RequestParser(myTcpParent.methods,this));
+  ConnectionHandler.call(this, socket, buffer, myTcpParent, new Parsers.RequestParser(myTcpParent));
 }
 
 RequestHandler.prototype = Object.create(ConnectionHandler.prototype, {constructor:{

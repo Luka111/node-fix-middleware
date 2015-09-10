@@ -47,24 +47,21 @@ server.start(14000);
 var options = {
   port: 14000
 };
+
+//credentials
+var name = 'luka';
+var password = 'kp';
+
 //starting client
-var client = new tcpClient(options);
-
-function introduce(){
-  var name = 'luka';
-  var password = 'kp';
-  this.sendCredentials(name,password);
-}
-
-function startFIXInitiator(){
-  this.sendFIXInitiatorSettings(settings);
-}
+var client = new tcpClient(options,name,password,settings);
 
 function sendFIXMessage(){
   this.sendFIXMessage(order);
 }
 
-client.executeCbOnEvent('plainConnection',introduce);
-client.executeCbOnEvent('secretConnection',startFIXInitiator);
-//client.executeCbOnEvent('fixInitiatorStarted',sendFIXMessage);
-client.executeCbOnEvent('fixConnectionEstablished',sendFIXMessage);
+client.execute(sendFIXMessage);
+client.execute(sendFIXMessage);
+client.execute(sendFIXMessage);
+client.execute(sendFIXMessage);
+client.execute(sendFIXMessage);
+client.execute(sendFIXMessage);

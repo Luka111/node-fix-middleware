@@ -2,19 +2,43 @@
 
 var net = require('net');
 var df = require('dateformat');
-var events = require('events');
 
 var Parsers = require('./parsers.js');
 var ConnectionHandler = require('./connectionHandler.js');
 var Coder = require('./codingFunctions.js');
+var MethodStore = require('./methodStore.js');
+
+//ServerEventHandler
+
+function ServerEventHandler(handler){
+  this.acceptFixMsg = null;
+  this.connectionEstablished = null;
+  MethodStore.call(this);
+}
+
+ServerEventHandler.prototype = Object.create(MethodStore.prototype, {constructor:{
+  value: ServerEventHandler,
+  enumerable: false,
+  writable: false
+}});
+
+ServerEventHandler.prototype.destroy = function(){
+  this.connectionEstablished = null;
+  this.acceptFixMsg = null;
+  MethodStore.prototype.destroy.call(this);
+};
 
 //tcp Client
 
-function tcpClient(options){
-  this.events = new events.EventEmitter();
+function tcpClient(options,name,password,settings){
+  this.methods = new ServerEventHandler();
+  this.methods.acceptFixMsg = this.acceptFixMsg.bind(this);
+  this.methods.connectionEstablished = this.connectionEstablished.bind(this);
   this.options = options;
+  this.executingAvailable = false;
+  this.waitingCallbacks = [];
   var socket = net.createConnection(options);
-  new CarpetConnectionHandler(socket,null,this);
+  new CarpetConnectionHandler(socket,null,this,null,name,password,settings);
   //TODO remove, testing
 }
 
@@ -22,29 +46,70 @@ tcpClient.prototype.destroy = function(){
   if (!!this.connectionHandler){
     this.connectionHandler.destroy();
   }
+  this.waitingCallbacks = null;
+  this.executingAvailable = null;
   this.options = null;
   this.connectionHandler = null;
-  this.events.destroy();
-  this.events = null;
+  this.methods.destroy();
+  this.methods = null;
   //TODO remove, testing
 };
 
+tcpClient.prototype.callMethod = function(methodName,reqArguments){
+  this.methods.callMethod(methodName,reqArguments);
+}
+
+//Event listeners from server
+
+tcpClient.prototype.acceptFixMsg = function(args){
+  if (!(args instanceof Array)){
+    throw new Error('sendFixMsg accepts array of params');
+  }
+  if (args.length !== 1){
+    throw new Error('sendFixMsg requires exactly 1 param');
+  }
+  var msg = args[0];
+  if (typeof msg !== 'object'){
+    throw new Error('sendFixMsg requires object as the first param! - ' + msg);
+  }
+  console.log('!=!=!=!=****!=!=!=! DOBIO SAM OVU FIX PORUKU SA SERVERA',msg);
+}
+
+tcpClient.prototype.connectionEstablished = function(args){
+  if (!(args instanceof Array)){
+    throw new Error('connectionEstablished accepts array of params');
+  }
+  if (args.length !== 1){
+    throw new Error('connectionEstablished requires exactly 1 param');
+  }
+  var sessionID = args[0];
+  if (typeof sessionID !== 'object'){
+    throw new Error('connectionEstablished requires object as the first param! - ' + sessionID);
+  }
+  this.executeNextMethod();
+}
+
 //Wrapper around connectionHandler executor 
 
-tcpClient.prototype.executeCbOnEvent = function(eventName, cb){
-  this.events.on(eventName,cb.bind(this));
-};
-
-tcpClient.prototype.sendCredentials = function(name,password){
-  if (!!this.connectionHandler.executor){
-    this.connectionHandler.executor.sendCredentials(name,password);
+tcpClient.prototype.execute = function(cb){
+  if (!cb){
+    console.log('&&& Nema metode za izvrsiti!');
+    return;
+  }
+  if (!this.executingAvailable){
+    console.log('&&& Metoda se trenutno ne moze izvrsiti, na cekanje!');
+    this.waitingCallbacks.push(cb);
+  }else{
+    console.log('&&& Izvrsavam metodu i blokiram sve ostale pozive!');
+    cb.call(this);
+    this.executingAvailable = false;
   }
 };
 
-tcpClient.prototype.sendFIXInitiatorSettings = function(settings){
-  if (!!this.connectionHandler.executor){
-    this.connectionHandler.executor.sendFIXInitiatorSettings(settings);
-  }
+tcpClient.prototype.executeNextMethod = function(){
+  console.log('&&& Dozvoljavam sve pozive i zovem sledecu metodu (ako je ima ;))!');
+  this.executingAvailable = true;
+  this.execute(this.waitingCallbacks.shift());
 };
 
 tcpClient.prototype.sendFIXMessage = function(msg){
@@ -55,8 +120,10 @@ tcpClient.prototype.sendFIXMessage = function(msg){
 
 //CarpetConnectionHandler - accepting first byte, if r -> initiating PlainConnectionHandler
 
-function CarpetConnectionHandler(socket,buffer,myTcpParent,parser){
-  myTcpParent.connectionHandler = this;
+function CarpetConnectionHandler(socket,buffer,myTcpParent,parser,name,password,settings){
+  this.name = name;
+  this.password = password;
+  this.settings = settings;
   ConnectionHandler.call(this,socket,buffer,myTcpParent,parser);
 }
 
@@ -67,6 +134,9 @@ CarpetConnectionHandler.prototype = Object.create(ConnectionHandler.prototype, {
 }});
 
 CarpetConnectionHandler.prototype.destroy = function(){
+  this.settings = null;
+  this.password = null;
+  this.name = null;
   ConnectionHandler.prototype.destroy.call(this);
 };
 
@@ -76,7 +146,7 @@ CarpetConnectionHandler.prototype.onConnect = function(){
     this.executor.destroy();
   }
   this.executor = new CredentialsExecutor(this);
-  this.myTcpParent.events.emit('plainConnection');
+  this.executor.sendCredentials(this.name,this.password);
 };
 
 //explicitly overriding onData
@@ -87,8 +157,9 @@ CarpetConnectionHandler.prototype.onData = function(buffer){
     console.log('CARPET: Prvo slovo jeste R, instanciram PlainConnectionHandler!');
     var myTcpParent = this.myTcpParent;
     var socket = this.socket;
+    var settings = this.settings;
     this.destroy();
-    new PlainConnectionHandler(socket,buffer.slice(1),myTcpParent);
+    new PlainConnectionHandler(socket,buffer.slice(1),myTcpParent,settings);
   }
 };
 
@@ -112,7 +183,8 @@ CarpetConnectionHandler.prototype.socketWriteCredentials = function(name,passwor
 
 //PlainConnectionHandler
 
-function PlainConnectionHandler(socket,buffer,myTcpParent){
+function PlainConnectionHandler(socket,buffer,myTcpParent,settings){
+  this.settings = settings;
   ConnectionHandler.call(this,socket,buffer,myTcpParent, new Parsers.SessionParser());
 }
 
@@ -123,6 +195,7 @@ PlainConnectionHandler.prototype = Object.create(ConnectionHandler.prototype, {c
 }});
 
 PlainConnectionHandler.prototype.destroy = function(){
+  this.settings = null;
   ConnectionHandler.prototype.destroy.call(this);
 };
 
@@ -136,6 +209,7 @@ PlainConnectionHandler.prototype.executeOnReadingFinished = function(){
   var myTcpParent = this.myTcpParent;
   var options = this.myTcpParent.options;
   var socket = this.socket;
+  var settings = this.settings;
   //destroy socket + destroy handler (in closed event handler)
   socket.destroy();
   this.socket = null;
@@ -143,13 +217,14 @@ PlainConnectionHandler.prototype.executeOnReadingFinished = function(){
   socket = net.createConnection(options);
   //create new Handler
   var secret = this.parser.getSecret();
-  new SecretConnectionHandler(socket,null,myTcpParent,secret);
+  new SecretConnectionHandler(socket,null,myTcpParent,secret,settings);
 };
 
 //SecretConnectionHandler
 
-function SecretConnectionHandler(socket,buffer,myTcpParent,secret){
-  ConnectionHandler.call(this,socket,buffer,myTcpParent,new Parsers.ApplicationParser(new ServerEventHandler(),this));
+function SecretConnectionHandler(socket,buffer,myTcpParent,secret,settings){
+  this.settings = settings;
+  ConnectionHandler.call(this,socket,buffer,myTcpParent,new Parsers.ApplicationParser(myTcpParent));
   this.socketWriteSecret(secret);
 };
 
@@ -160,6 +235,7 @@ SecretConnectionHandler.prototype = Object.create(ConnectionHandler.prototype, {
 }});
 
 SecretConnectionHandler.prototype.destroy = function(){
+  this.settings = null;
   ConnectionHandler.prototype.destroy.call(this);
 };
 
@@ -191,14 +267,17 @@ SecretConnectionHandler.prototype.executeOnReadingFinished = function(){
         this.executor.destroy();
       }
       this.executor = new FixInitiatorExecutor(this);
-      this.myTcpParent.events.emit('secretConnection');
+      this.executor.sendFIXInitiatorSettings(this.settings);
       break;
     case 'fix_initiator_started':
       if (!!this.executor){
         this.executor.destroy();
       }
       this.executor = new FixMsgExecutor(this);
-      this.myTcpParent.events.emit('fixInitiatorStarted');
+      break; 
+    case 'successfully_sent':
+      console.log('Uspesno poslata FIX poruka!');
+      this.myTcpParent.executeNextMethod();
       break; 
   }
   this.parser.callMethod(this);
@@ -316,50 +395,6 @@ FixMsgExecutor.prototype.sendFIXMessage = function(fixMsg){
   }
   var codedFixMsg = Coder.createZeroDelimitedFixMsg(fixMsg);
   this.handler.sendMethodBuffer(new Buffer(codedFixMsg),new Buffer('sendFixMsg'));
-};
-
-//ServerEventHandler
-
-function acceptFixMsg(args){
-  if (!(args instanceof Array)){
-    throw new Error('sendFixMsg accepts array of params');
-  }
-  if (args.length !== 1){
-    throw new Error('sendFixMsg requires exactly 1 param');
-  }
-  var msg = args[0];
-  if (typeof msg !== 'object'){
-    throw new Error('sendFixMsg requires object as the first param! - ' + msg);
-  }
-  console.log('!=!=!=!=****!=!=!=! DOBIO SAM OVU FIX PORUKU SA SERVERA',msg);
-}
-
-function connectionEstablished(args){
-  if (!(args instanceof Array)){
-    throw new Error('connectionEstablished accepts array of params');
-  }
-  if (args.length !== 1){
-    throw new Error('connectionEstablished requires exactly 1 param');
-  }
-  var sessionID = args[0];
-  if (typeof sessionID !== 'object'){
-    throw new Error('connectionEstablished requires object as the first param! - ' + sessionID);
-  }
-  console.log('VEZA USPOSTAVLJENA!',sessionID);
-  if (!!this.myTcpParent){ //suppose we are binding connectionHandler as a context
-    this.myTcpParent.events.emit('fixConnectionEstablished');
-    console.log('OPALIO EVENT connectionEstablished!!!!');
-  }
-}
-
-//Never put methods in prototype because of security reasons (not working ofc)
-//Also, these functions are not supposed to be binded, because the caller will bind context
-function ServerEventHandler(handler){
-  this.acceptFixMsg = acceptFixMsg;
-  this.connectionEstablished = connectionEstablished;
-}
-
-ServerEventHandler.prototype.destroy = function(){
 };
 
 

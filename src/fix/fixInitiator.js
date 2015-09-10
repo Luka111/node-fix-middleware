@@ -83,18 +83,19 @@ Initiator.prototype.getConnectionEstablished = function(val){
   return this.connectionEstablished;
 };
 
-Initiator.prototype.send = function(msg){
+Initiator.prototype.send = function(cb,msg){
   if (!this.started){
     throw new Error('FIX Initiator is not started!');
   }
   if (!this.connectionEstablished){
     throw new Error('Connection to FIX Acceptor is not established!');
   }
-  this.quickfixInitiator.send(msg,this.successfullySent.bind(this));
+  this.quickfixInitiator.send(msg,this.successfullySent.bind(this,cb));
 };
 
-Initiator.prototype.successfullySent = function(){
+Initiator.prototype.successfullySent = function(cb){
   console.log('INITIATOR: Message successfully sent!');
+  cb();
 };
 
 Initiator.prototype.registerEventListeners = function(listeners){
