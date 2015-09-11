@@ -332,6 +332,21 @@ RequestHandler.prototype.destroy = function(){
   ConnectionHandler.prototype.destroy.call(this);
 };
 
+//override, adding catch functionallity
+RequestHandler.prototype.onData = function (buffer) {
+  try{
+    ConnectionHandler.prototype.onData.call(this,buffer);
+  }catch (err){
+    console.log('HANDLING REQUEST ERROR: ',err);
+    this.socketWriteError(new Buffer(err.toString()));
+    var s = this.socket;
+    this.socket = null;
+    s.end();
+    s.destroy();
+    return;
+  }
+};
+
 RequestHandler.prototype.readingFinished = function(){
   return this.parser.zeroCntEqualsRequiredZeros();
 };

@@ -139,6 +139,9 @@ ConnectionHandler.prototype.socketWriteError = function(msg){
     throw new Error('socketWriteError: accepts buffer as argument');
   }
   this.socket.write(this.makeWriteBuffer(msg,'e',true));
+  if (!!this.myTcpParent.executingMethod){
+    this.myTcpParent.executingMethod = false;
+  }
 };
 
 ConnectionHandler.prototype.socketWriteResult = function(msg){
@@ -150,7 +153,6 @@ ConnectionHandler.prototype.socketWriteResult = function(msg){
   }
   this.socket.write(this.makeWriteBuffer(msg,'r',true));
   if (!!this.myTcpParent.executingMethod){
-    console.log('^^^^^ IZVRSENA METODA');
     this.myTcpParent.executingMethod = false;
   }
 };
@@ -187,23 +189,13 @@ ConnectionHandler.prototype.onData = function (buffer) {
   if (!this.socket) return;
   if (!buffer) return;
   console.log('*** Recieved buffer :',buffer.toString());
-  //try{
-    for (var i=0; i<buffer.length; i++){
-      this.parser.executeByte(buffer[i]);
-      var executed = this.executeIfReadingFinished(this.executeOnReadingFinished.bind(this,buffer));
-      if (!!executed && !this.continueAfterExecute){
-        return;
-      }
+  for (var i=0; i<buffer.length; i++){
+    this.parser.executeByte(buffer[i]);
+    var executed = this.executeIfReadingFinished(this.executeOnReadingFinished.bind(this,buffer));
+    if (!!executed && !this.continueAfterExecute){
+      return;
     }
-  //}catch (err){
-    //console.log('ERROR: ',err);
-    //var s = this.socket;
-    //this.socket = null;
-    //s.socketWriteError(new Buffer(err.toString()));
-    //s.end();
-    //s.destroy();
-    //return;
-  //}
+  }
 };
 
 //abstract

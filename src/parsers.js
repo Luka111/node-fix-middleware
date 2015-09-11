@@ -201,6 +201,7 @@ ApplicationParser.prototype = Object.create(RequestParser.prototype, {constructo
 }});
 
 ApplicationParser.prototype.destroy = function(){
+  console.log('((((( APPLICATION PARSER SE UBIJA )))))');
   this.firstChar = null;
   this.wordIndicator = null;
   this.error = null; 

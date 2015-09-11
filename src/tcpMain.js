@@ -29,6 +29,15 @@ var order = {
   }
 };
 
+var invalidOrder = {
+  header: {
+    8: 'FIX.4.4',
+    a35: 'D',
+    49: 'ELECTRONIFIE',
+    56: 'NODEQUICKFIX'
+  }
+};
+
 function execOnSuccess(msg){
   console.log('***',msg);
 }
@@ -59,7 +68,11 @@ function sendFIXMessage(){
   this.sendFIXMessage(order);
 }
 
-client.execute(sendFIXMessage);
+function sendIncorrectFIXMessage(){
+  this.sendFIXMessage(invalidOrder);
+}
+
+client.execute(sendIncorrectFIXMessage);
 client.execute(sendFIXMessage);
 client.execute(sendFIXMessage);
 client.execute(sendFIXMessage);
