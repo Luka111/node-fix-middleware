@@ -207,7 +207,7 @@ tcpFixServer.checkCredentials = function(name, password){
   //TODO real DB checking
 };
 
-//TODO remove, just for testing, not working
+//TODO remove, just for testing
 tcpFixServer.validSecret = null;
 
 tcpFixServer.checkSecret = function(secret){
@@ -221,7 +221,6 @@ tcpFixServer.checkSecret = function(secret){
 };
 
 tcpFixServer.generateSecret = function(){
-  //TODO real secret generator
   var rand16 = crypto.randomBytes(16);
   tcpFixServer.validSecret = rand16;
   console.log('=-=-= IZGENERISANI SECRET =-=-=',rand16);

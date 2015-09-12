@@ -471,7 +471,6 @@ ValueByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker)
     }
     parentByteWorker.objForFill[parentByteWorker.objForFill.tagsArray[parentByteWorker.tagsCnt]][parentByteWorker.tag] = parentByteWorker.value;
     console.log('ValueByteWorker zavrsio posao i napravio',parentByteWorker.value,'prepusta stefetu TagByteWorker');
-    console.log('=== Takodje je napravio ovo =',parentByteWorker.objForFill);
     parentByteWorker.tag = '';
     parentByteWorker.value = '';
     parentByteWorker.byteWorker.destroy();

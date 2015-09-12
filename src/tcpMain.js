@@ -72,9 +72,13 @@ function sendIncorrectFIXMessage(){
   this.sendFIXMessage(invalidOrder);
 }
 
-client.execute(sendIncorrectFIXMessage);
+//client.execute(sendIncorrectFIXMessage);
+/*
+for (var i=0; i<1000; i++){
+  client.execute(sendFIXMessage);
+}
+*/
 client.execute(sendFIXMessage);
-client.execute(sendFIXMessage);
-client.execute(sendFIXMessage);
-client.execute(sendFIXMessage);
-client.execute(sendFIXMessage);
+//client.execute(sendFIXMessage);
+//client.execute(sendFIXMessage);
+//client.execute(sendFIXMessage);
