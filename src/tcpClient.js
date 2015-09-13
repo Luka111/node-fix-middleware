@@ -13,6 +13,7 @@ var MethodStore = require('./methodStore.js');
 function ServerEventHandler(handler){
   this.acceptFixMsg = null;
   this.connectionEstablished = null;
+  this.connectionClosed = null;
   MethodStore.call(this);
 }
 
@@ -23,6 +24,7 @@ ServerEventHandler.prototype = Object.create(MethodStore.prototype, {constructor
 }});
 
 ServerEventHandler.prototype.destroy = function(){
+  this.connectionClosed = null;
   this.connectionEstablished = null;
   this.acceptFixMsg = null;
   MethodStore.prototype.destroy.call(this);
@@ -34,6 +36,7 @@ function tcpClient(options,name,password,settings){
   this.methods = new ServerEventHandler();
   this.methods.acceptFixMsg = this.acceptFixMsg.bind(this);
   this.methods.connectionEstablished = this.connectionEstablished.bind(this);
+  this.methods.connectionClosed = this.connectionClosed.bind(this);
   this.options = options;
   this.executingAvailable = false;
   this.waitingCallbacks = [];
@@ -85,6 +88,20 @@ tcpClient.prototype.connectionEstablished = function(args){
   var sessionID = args[0];
   if (typeof sessionID !== 'object'){
     throw new Error('connectionEstablished requires object as the first param! - ' + sessionID);
+  }
+  this.executeNextMethod();
+}
+
+tcpClient.prototype.connectionClosed = function(args){
+  if (!(args instanceof Array)){
+    throw new Error('connectionClosed accepts array of params');
+  }
+  if (args.length !== 1){
+    throw new Error('connectionClosed requires exactly 1 param');
+  }
+  var sessionID = args[0];
+  if (typeof sessionID !== 'object'){
+    throw new Error('connectionClosed requires object as the first param! - ' + sessionID);
   }
   this.executeNextMethod();
 }

@@ -139,6 +139,10 @@ tcpFixServer.prototype.onLogonListener = function(emitter,sessionID){
 tcpFixServer.prototype.onLogoutListener = function(emitter,sessionID){
   this.listeners.onLogoutListener(emitter,sessionID); //super
   this.fixInitiator.setConnectionEstablished(false);
+  console.log('****** SESSIONID',sessionID);
+  var codedSessionId = Coder.createZeroDelimitedSessionId(sessionID);
+  console.log('****** CODED SESSIONID',codedSessionId);
+  this.connectionHandler.socketWriteEvent('connectionClosed',codedSessionId);
 };
 
 tcpFixServer.prototype.fromAppListener = function(emitter,msg,sessionID){

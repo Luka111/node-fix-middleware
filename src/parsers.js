@@ -224,6 +224,8 @@ ApplicationParser.prototype.argumentByteWorkerFactory = function(operationName){
       return new TagValueByteWorker(FIXMessage);
     case 'connectionEstablished':
       return new TagValueByteWorker(SessionIDMessage);
+    case 'connectionClosed':
+      return new TagValueByteWorker(SessionIDMessage);
   };
   throw new Error(operationName + ' method is not implemented!');
 };

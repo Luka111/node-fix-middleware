@@ -39,13 +39,13 @@ var invalidOrder = {
 };
 
 function execOnSuccess(msg){
-  console.log('***',msg);
+  console.log('<***>',msg);
 }
 
 //creating fixAcceptor
-var acceptor = new fixAcceptor();
+//var acceptor = new fixAcceptor();
 //starting fixAcceptor
-acceptor.start(execOnSuccess);
+//acceptor.start(execOnSuccess);
 
 //creating server
 var server = new tcpServer();
