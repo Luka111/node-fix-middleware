@@ -62,7 +62,7 @@ tcpFixServer.prototype.destroy = function(){
 
 tcpFixServer.prototype.callMethod = function(methodName,reqArguments){
   if (this.executingMethod){
-    this.connectionHandler.socketWriteError(new Buffer('executing_method'));
+    this.connectionHandler.socketWriteError('executing_method');
     return;
   }
   console.log('^^^^^ METODA JE U TOKU');
@@ -133,7 +133,7 @@ tcpFixServer.prototype.onLogonListener = function(emitter,sessionID){
   console.log('@@@@@@@@@ SESSIONID',sessionID);
   var codedSessionId = Coder.createZeroDelimitedSessionId(sessionID);
   console.log('@@@@@@@@@ CODED SESSIONID',codedSessionId);
-  this.connectionHandler.socketWriteEvent(new Buffer('connectionEstablished'),new Buffer(codedSessionId));
+  this.connectionHandler.socketWriteEvent('connectionEstablished',codedSessionId);
 };
 
 tcpFixServer.prototype.onLogoutListener = function(emitter,sessionID){
@@ -147,7 +147,7 @@ tcpFixServer.prototype.fromAppListener = function(emitter,msg,sessionID){
   var codedFixMsg = Coder.createZeroDelimitedFixMsg(msg.message);
   console.log('< $$$ KODOVANA',codedFixMsg);
   //connection handler must exists because fixInitiator exists
-  this.connectionHandler.socketWriteEvent(new Buffer('acceptFixMsg'),new Buffer(codedFixMsg));
+  this.connectionHandler.socketWriteEvent('acceptFixMsg',codedFixMsg);
 };
 
 //Intern methods
@@ -194,6 +194,9 @@ tcpFixServer.prototype.onData = function(socket, buffer){
     console.log('no ctor while reading', buffer, ', socket will be destroyed');
     socket.destroy();
     return;
+  }
+  if (!!this.connectionHandler){
+    this.connectionHandler.destroy();
   }
   new ctor(socket, buffer.slice(1), this);
 };
@@ -255,12 +258,18 @@ CredentialsHandler.prototype.readingFinished = function(){
   return this.parser.getZeroCnt() === 2; //reading until 2 zeros
 };
 
-CredentialsHandler.prototype.executeOnReadingFinished = function(buffer){
+var _zeroBuffer = new Buffer(1);
+_zeroBuffer[0] = 0;
+
+CredentialsHandler.prototype.executeOnReadingFinished = function(){
   if (tcpFixServer.checkCredentials(this.parser.getName(),this.parser.getPassword())){
     var secret = tcpFixServer.generateSecret();
-    this.socketWriteResult(secret);
+    //this.socketWriteResult(secret.toString());
+    this.socket.write('r');
+    this.socket.write(secret);
+    this.socket.write(_zeroBuffer);
   }else{
-    this.socketWriteError(new Buffer('Incorrect username/password!'));
+    this.socketWriteError('Incorrect username/password!');
   }
   var s = this.socket;
   this.socket = null;
@@ -292,18 +301,17 @@ SessionHandler.prototype.readingFinished = function(){
   return this.parser.doneReading();
 };
 
-SessionHandler.prototype.executeOnReadingFinished = function(buffer){
-  var bufferLeftover = buffer.slice(16);
+SessionHandler.prototype.executeOnReadingFinished = function(bufferLeftover){
   var s = this.socket;
   if (tcpFixServer.checkSecret(this.parser.getSecret())){
     console.log('++DOBAR SECRET!++');
-    this.socketWriteResult(new Buffer('correct_secret'));
+    this.socketWriteResult('correct_secret');
     var myTcpParent = this.myTcpParent;
     this.destroy();
     new RequestHandler(s,bufferLeftover,myTcpParent);
   }else{
     console.log('--LOS SECRET!--');
-    this.socketWriteError(new Buffer('Incorrect secret!'));
+    this.socketWriteError('Incorrect secret!');
     var s = this.socket;
     this.socket = null;
     s.destroy();
@@ -337,7 +345,7 @@ RequestHandler.prototype.onData = function (buffer) {
     ConnectionHandler.prototype.onData.call(this,buffer);
   }catch (err){
     console.log('HANDLING REQUEST ERROR: ',err);
-    this.socketWriteError(new Buffer(err.toString()));
+    this.socketWriteError(err.toString());
     var s = this.socket;
     this.socket = null;
     s.end();
@@ -350,7 +358,7 @@ RequestHandler.prototype.readingFinished = function(){
   return this.parser.zeroCntEqualsRequiredZeros();
 };
 
-RequestHandler.prototype.executeOnReadingFinished = function(buffer){
+RequestHandler.prototype.executeOnReadingFinished = function(){
   this.parser.callMethod(this.myTcpParent);
 };
 

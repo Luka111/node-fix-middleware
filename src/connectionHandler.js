@@ -28,6 +28,11 @@ ConnectionHandler.prototype.destroy = function () {
     this.executor.destroy();
   }
   this.executor = null;
+  if (!!this.myTcpParent) {
+    if (this.myTcpParent.connectionHandler === this){
+      this.myTcpParent.connectionHandler = null;
+    }
+  }
   this.myTcpParent = null;
   this.socket = null;
 };
@@ -43,63 +48,70 @@ ConnectionHandler.prototype.onError = function(){
 
 ConnectionHandler.prototype.onClose = function(){
   console.log('Handler:  Socket closed!');
+  var myTcpParent = this.myTcpParent;
   this.destroy();
 };
 
-ConnectionHandler.prototype.sendMethodBuffer = function(buffer,operation){
-  if (!buffer){
-    throw new Error('buffer is required!');
+ConnectionHandler.prototype.isString = function(thing) {
+  return ('string' === typeof thing) || (thing instanceof String);
+}
+
+var _zeroBuffer = Buffer(String.fromCharCode(0));
+
+ConnectionHandler.prototype.sendMethodBuffer = function(args,operation){
+  if (!args){
+    throw new Error('args is required!');
   }
-  if (!Buffer.isBuffer(buffer)){
-    throw new Error('first arg must be buffer!');
+  if (!this.isString(args)){
+    throw new Error('first arg must be a string!');
   }
   if (!operation){
     throw new Error('operation is required!');
   }
-  if (!Buffer.isBuffer(operation)){
-    throw new Error('second arg must be buffer!');
+  if (!this.isString(operation)){
+    throw new Error('second arg must be string!');
   }
-  var newBuffer = new Buffer(operation.length + 1 + buffer.length + 1);
-  operation.copy(newBuffer);
-  newBuffer[operation.length] = 0;
-  buffer.copy(newBuffer,operation.length+1);
-  newBuffer[newBuffer.length - 1] = 0;
-  this.socket.write(newBuffer);
+  this.socket.write(operation, 'utf8');
+  this.socket.write(_zeroBuffer);
+  this.socket.write(args, 'utf8');
+  this.socket.write(_zeroBuffer);
 };
 
-ConnectionHandler.prototype.makeWriteBuffer = function(buffer,operation,addZero){
-  if (!buffer){
-    throw new Error('buffer is required!');
+ConnectionHandler.prototype.writeData = function (data, operation, addZero) {
+  if (!data){
+    throw new Error('data is required!');
   }
-  if (!Buffer.isBuffer(buffer)){
-    throw new Error('first arg must be buffer!');
+  if (!this.isString(data)){
+    throw new Error('first arg must be string!');
   }
-  if (typeof operation !== 'string'){
+  if (!this.isString(operation)){
     throw new Error('second arg must be string!');
   }
   if (typeof operation.length > 1){
-    throw new Error('operation must be 1 letter string! - ' + operation);
+    throw new Error('operation must be a 1 letter string! - ' + operation);
   }
   if (typeof addZero !== 'boolean'){
     throw new Error('addZero must me typeof boolean!');
   }
-  var newBuffer = new Buffer(buffer.length + (!!addZero ? 1 : 0) + operation.length);
-  if (operation.length === 1){
-    newBuffer[0] = operation.charCodeAt(0);
+  if (operation.length === 1) {
+    this.socket.write(operation, 'utf8');
   }
-  buffer.copy(newBuffer,operation.length);
-  if (!!addZero){
-    newBuffer[newBuffer.length - 1] = 0;
+  this.socket.write(data,'utf8');
+  if (addZero) {
+    this.socket.write(_zeroBuffer);
   }
-  return newBuffer;
 };
 
-ConnectionHandler.prototype.makeWriteBufferArray = function(bufArray,opCode){
+ConnectionHandler.prototype.outBuf = function (data) {
+  this.writeData(data, '', true);
+};
+
+ConnectionHandler.prototype.writeBufferArray = function (bufArray, opCode, addZero) {
   if (!bufArray){
     throw 'bufArray is requried!';
   }
   if (!(bufArray instanceof Array)){
-    throw 'makeWriteBufferArray accepts array of params';
+    throw 'first param has to be an array';
   }
   if (bufArray.length === 0){
     throw 'array is empty';
@@ -113,32 +125,28 @@ ConnectionHandler.prototype.makeWriteBufferArray = function(bufArray,opCode){
   if (typeof opCode.length > 1){
     throw 'opCode must be length 1!';
   }
-  var concatArray = [];
-  concatArray.push(this.makeWriteBuffer(bufArray[0],opCode,true));
-  for (var i=1; i<bufArray.length; i++){
-    concatArray.push(this.makeWriteBuffer(bufArray[i],'',true));
-  }
-  return Buffer.concat(concatArray);
+  this.socket.write(opCode, 'utf8');
+  bufArray.forEach(this.outBuf.bind(this));
 };
 
 ConnectionHandler.prototype.socketWriteSecret = function(secret){
   if (!secret){
     throw new Error('socketWriteSecret: secret is required!');
   }
-  if (!Buffer.isBuffer(secret)){
-    throw new Error('socketWriteSecret accepts buffer as argument');
+  if (!this.isString(secret)){
+    throw new Error('socketWriteSecret accepts string as argument');
   }
-  this.socket.write(this.makeWriteBuffer(secret,'s',false));
+  this.writeData(secret, 's', false);
 };
 
 ConnectionHandler.prototype.socketWriteError = function(msg){
   if (!msg){
     throw new Error('socketWriteError: must write something!');
   }
-  if (!Buffer.isBuffer(msg)){
-    throw new Error('socketWriteError: accepts buffer as argument');
+  if (!this.isString(msg)){
+    throw new Error('socketWriteError: accepts string as argument');
   }
-  this.socket.write(this.makeWriteBuffer(msg,'e',true));
+  this.writeData(msg, 'e', true);
   if (!!this.myTcpParent.executingMethod){
     this.myTcpParent.executingMethod = false;
   }
@@ -148,10 +156,10 @@ ConnectionHandler.prototype.socketWriteResult = function(msg){
   if (!msg){
     throw new Error('socketWriteResult: must write something!');
   }
-  if (!Buffer.isBuffer(msg)){
-    throw new Error('socketWriteResult: accepts buffer as argument');
+  if (!this.isString(msg)){
+    throw new Error('socketWriteResult: accepts string as argument');
   }
-  this.socket.write(this.makeWriteBuffer(msg,'r',true));
+  this.writeData(msg, 'r', true);
   if (!!this.myTcpParent.executingMethod){
     this.myTcpParent.executingMethod = false;
   }
@@ -161,37 +169,51 @@ ConnectionHandler.prototype.socketWriteNotification = function(msg){
   if (!msg){
     throw new Error('socketWriteNotification: must write something!');
   }
-  if (!Buffer.isBuffer(msg)){
-    throw new Error('socketWriteNotification: accepts buffer as argument');
+  if (!this.isString(msg)){
+    throw new Error('socketWriteNotification: accepts string as argument');
   }
-  this.socket.write(this.makeWriteBuffer(msg,'n',true));
+  this.writeData(msg, 'n', true);
 };
 
 ConnectionHandler.prototype.socketWriteEvent = function(eventName,msg){
   if (!eventName){
     throw new Error('socketWriteEvent : must write something!');
   }
-  if (!Buffer.isBuffer(eventName)){
-    throw new Error('socketWriteEvent: accepts buffer as argument');
+  if (!this.isString(eventName)){
+    throw new Error('socketWriteEvent: accepts string as argument');
   }
   if (!msg){
     throw new Error('socketWriteEvent : must write something!');
   }
-  if (!Buffer.isBuffer(msg)){
-    throw new Error('socketWriteEvent: accepts buffer as argument');
+  if (!this.isString(msg)){
+    throw new Error('socketWriteEvent: accepts string as argument');
   }
-  var buffer = this.makeWriteBufferArray([eventName,msg],'o');
-  this.socket.write(buffer);
+  this.writeBufferArray([eventName,msg], 'o');
 };
 
 //template method
+/*
 ConnectionHandler.prototype.onData = function (buffer) {
   if (!this.socket) return;
   if (!buffer) return;
-  console.log('*** Recieved buffer :',buffer.toString());
+  console.log('*** Recieved buffer :',buffer.toString().replace(String.fromCharCode(0),'#'));
   for (var i=0; i<buffer.length; i++){
     this.parser.executeByte(buffer[i]);
     var executed = this.executeIfReadingFinished(this.executeOnReadingFinished.bind(this,buffer));
+    if (!!executed && !this.continueAfterExecute){
+      return;
+    }
+  }
+};
+*/
+ConnectionHandler.prototype.onData = function(buffer) {
+  if (!this.socket) return;
+  if (!buffer) return;
+  if (buffer.length<1) return;
+  console.log('*** Recieved buffer :',buffer.toString().replace(String.fromCharCode(0),'#'));
+  for (var i=0; i<buffer.length; i++){
+    this.parser.executeByte(buffer[i]);
+    var executed = this.executeIfReadingFinished(this.executeOnReadingFinished.bind(this,buffer.slice(i+1)));
     if (!!executed && !this.continueAfterExecute){
       return;
     }

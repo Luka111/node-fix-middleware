@@ -113,7 +113,7 @@ tcpClient.prototype.executeNextMethod = function(){
 };
 
 tcpClient.prototype.sendFIXMessage = function(msg){
-  if (!!this.connectionHandler.executor){
+  if (this.connectionHandler && this.connectionHandler.executor){
     this.connectionHandler.executor.sendFIXMessage(msg);
   }
 };
@@ -170,14 +170,13 @@ CarpetConnectionHandler.prototype.socketWriteCredentials = function(name,passwor
   if (!password){
     throw new Error('socketWriteCredentials: password is required!');
   }
-  if (!Buffer.isBuffer(name)){
+  if (!this.isString(name)){
     throw new Error('socketWriteCredentials: accepts buffer as argument');
   }
-  if (!Buffer.isBuffer(password)){
+  if (!this.isString(password)){
     throw new Error('socketWriteCredentials: accepts buffer as argument');
   }
-  var msg = this.makeWriteBufferArray([name,password],'c');
-  this.socket.write(msg);
+  this.writeBufferArray([name, password], 'c');
 };
 
 
@@ -225,7 +224,9 @@ PlainConnectionHandler.prototype.executeOnReadingFinished = function(){
 function SecretConnectionHandler(socket,buffer,myTcpParent,secret,settings){
   this.settings = settings;
   ConnectionHandler.call(this,socket,buffer,myTcpParent,new Parsers.ApplicationParser(myTcpParent));
-  this.socketWriteSecret(secret);
+  //this.socketWriteSecret(secret.toString());
+  this.socket.write('s');
+  this.socket.write(secret);
 };
 
 SecretConnectionHandler.prototype = Object.create(ConnectionHandler.prototype, {constructor:{
@@ -255,8 +256,8 @@ SecretConnectionHandler.prototype.executeOnReadingFinished = function(){
   console.log('STA JE ERROR',error);
   if (!!error){
     console.log('CLIENT: Error',error);
-    var c = this.socket;
-    c.destroy();
+    var s = this.socket;
+    s.destroy();
     this.socket = null;
     return;
   }
@@ -338,7 +339,7 @@ CredentialsExecutor.prototype.sendCredentials = function(name, password){
   if (typeof password!== 'string'){
     throw new Error( 'sendCredentials: password param must be string!');
   }
-  this.handler.socketWriteCredentials(new Buffer(name), new Buffer(password));
+  this.handler.socketWriteCredentials(name, password);
 };
 
 //FixInitiatorExecutor
@@ -364,7 +365,7 @@ FixInitiatorExecutor.prototype.sendFIXInitiatorSettings = function(settings){
   if (typeof settings !== 'string'){
     throw new Error('sendFIXInitiatorSettings: settings param type must be string');
   }
-  this.handler.sendMethodBuffer(new Buffer(settings),new Buffer('startFixInitiator'));
+  this.handler.sendMethodBuffer(settings, 'startFixInitiator');
 };
 
 //FixMsgExecutor
@@ -394,7 +395,7 @@ FixMsgExecutor.prototype.sendFIXMessage = function(fixMsg){
     throw new Error('sendFIXMessage: fixMsg param must contain property header');
   }
   var codedFixMsg = Coder.createZeroDelimitedFixMsg(fixMsg);
-  this.handler.sendMethodBuffer(new Buffer(codedFixMsg),new Buffer('sendFixMsg'));
+  this.handler.sendMethodBuffer(codedFixMsg, 'sendFixMsg');
 };
 
 

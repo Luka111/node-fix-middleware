@@ -156,12 +156,12 @@ RequestParser.prototype.argumentByteWorkerFactory = function(operationName){
 
 RequestParser.prototype.fixMsgSuccessfullySent = function(){
   console.log('%%%%% FIX poruka je uspesno poslata i obavestavam clienta o tome!');
-  this.myTcpParent.connectionHandler.socketWriteResult(new Buffer('successfully_sent'));
+  this.myTcpParent.connectionHandler.socketWriteResult('successfully_sent');
 };
 
 RequestParser.prototype.fixInitiatorSuccessfullyStarted = function(){
   console.log('%%%%% FIX initiator se startovao i obavestio clienta o tome!');
-  this.myTcpParent.connectionHandler.socketWriteResult(new Buffer('fix_initiator_started'));
+  this.myTcpParent.connectionHandler.socketWriteResult('fix_initiator_started');
 };
 
 RequestParser.prototype.execute = function(bufferItem){
