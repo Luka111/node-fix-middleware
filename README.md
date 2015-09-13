@@ -1,2 +1,2 @@
 # node-fix-middleware
-Middleware for FIX protocol using SOAP
+Middleware for FIX protocol
