@@ -1,30 +1,44 @@
 'use strict';
 
 var BufferHandler = require('./bufferHandler.js');
+var Checkers = require('./checkers.js');
 
-function IdleParser(){
+function IdleParser(maxBufferLength){
   this.bufferHandler = new BufferHandler();
+  if (!maxBufferLength) maxBufferLength = 1024; //default
+  this.maxBufferLength = maxBufferLength;
+  this.checkers = [new Checkers.LengthChecker(this.maxBufferLength)];
 }
 
 IdleParser.prototype.destroy = function(){
+  this.maxBufferLength = null; //default
+  if (!!this.bufferHandler){
+    console.log('______ SPREMAM SE DA UNISTIM PARSERA, DO OVDE JE STIGO BUFHANDLER',this.bufferHandler.getLastWrittenIndex());
+    this.bufferHandler.clearCache();
+  }
   this.bufferHandler.destroy();
   this.bufferHandler = null;
 };
 
 IdleParser.prototype.execute = function(bufferItem){
-  throw new Error('Must implement parsing logic!');
+  throw new Error('execute logic is not implemented!');
+};
+
+IdleParser.prototype.doCheck = function(args,checker){
+  checker.check(args);
 };
 
 IdleParser.prototype.executeByte= function(bufferItem){
   this.bufferHandler.saveToCache(bufferItem);
+  this.checkers.forEach(this.doCheck.bind(this,[bufferItem,this.bufferHandler.getLastWrittenIndex()]));
   this.execute(bufferItem);
 };
 
 function CredentialsParser(){
+  IdleParser.call(this,128);
   this.zeroCnt = 0;
   this.name = '';
   this.password = '';
-  IdleParser.call(this);
 }
 
 CredentialsParser.prototype = Object.create(IdleParser.prototype, {constructor:{
@@ -104,7 +118,7 @@ SessionParser.prototype.getSecret = function(){
 function RequestParser(myTcpParent){ // Connection handler is needed for notifying client
   this.myTcpParent = myTcpParent;
   this.reset();
-  IdleParser.call(this);
+  IdleParser.call(this,2048);
 }
 
 RequestParser.prototype = Object.create(IdleParser.prototype, {constructor:{
@@ -138,6 +152,7 @@ RequestParser.prototype.reset = function(){
   }
   this.byteWorker = new MethodByteWorker();
   if (!!this.bufferHandler){
+    console.log('______ SPREMAM SE DA RESETUJEM PARSERA, DO OVDE JE STIGO BUFHANDLER',this.bufferHandler.getLastWrittenIndex());
     this.bufferHandler.clearCache();
   }
 };
