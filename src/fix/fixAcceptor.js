@@ -1,5 +1,7 @@
 'use strict';
 
+var Logger = require('../logger.js');
+
 var events = require('events');
 var quickfix = require('node-quickfix');
 var path = require('path');
@@ -62,7 +64,7 @@ Acceptor.prototype.start = function(cb){
 };
 
 Acceptor.prototype.successfullyStarted = function(cb){
-	console.log('FIX Acceptor Started');
+	Logger.log('FIX Acceptor Started');
   this.started = true;
   this.registerEventListeners();
   if (!!cb){
@@ -72,7 +74,7 @@ Acceptor.prototype.successfullyStarted = function(cb){
 
 Acceptor.prototype.send = function(msg){
   if (!this.started){
-    console.log('FIX Acceptor is not started, resending in 5sec...');
+    Logger.log('FIX Acceptor is not started, resending in 5sec...');
     setTimeout(this.send.bind(this,msg),5000);
   }else{
     this.quickfixAcceptor.send(msg,this.successfullySent.bind(this));
@@ -80,7 +82,7 @@ Acceptor.prototype.send = function(msg){
 };
 
 Acceptor.prototype.successfullySent = function(){
-  console.log('ACCEPTOR: Message successfully sent!');
+  Logger.log('ACCEPTOR: Message successfully sent!');
 };
 
 Acceptor.prototype.registerEventListeners = function(){
@@ -92,7 +94,7 @@ Acceptor.prototype.registerEventListeners = function(){
 };
 
 Acceptor.prototype.registerListener = function(event){
-  this.quickfixAcceptor.on(event, console.log.bind(null, event));
+  this.quickfixAcceptor.on(event, Logger.log.bind(null, event));
 };
 
 module.exports = Acceptor;

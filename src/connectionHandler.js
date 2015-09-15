@@ -1,5 +1,7 @@
 'use strict';
 
+var Logger = require('./logger.js');
+
 //Abstract Handler
 //TODO check if i give every ConnectionHandler buffer leftover in constr..?
 function ConnectionHandler(socket, buffer, myTcpParent, parser) {
@@ -18,7 +20,7 @@ function ConnectionHandler(socket, buffer, myTcpParent, parser) {
 }
 
 ConnectionHandler.prototype.destroy = function () {
-  console.log('((((( CONNECTION HANDLER SE UBIJA )))))');
+  Logger.log('((((( CONNECTION HANDLER SE UBIJA )))))');
   if (!!this.parser){
     this.parser.destroy();
   }
@@ -38,16 +40,16 @@ ConnectionHandler.prototype.destroy = function () {
 };
 
 ConnectionHandler.prototype.onConnect = function(){
-  console.log ('Connection established!');
+  Logger.log ('Connection established!');
 };
 
 ConnectionHandler.prototype.onError = function(){
-  console.log('Handler:  Socket error!');
+  Logger.log('Handler:  Socket error!');
   this.destroy();
 };
 
 ConnectionHandler.prototype.onClose = function(){
-  console.log('Handler:  Socket closed!');
+  Logger.log('Handler:  Socket closed!');
   var myTcpParent = this.myTcpParent;
   this.destroy();
 };
@@ -196,7 +198,7 @@ ConnectionHandler.prototype.onData = function(buffer) {
   if (!this.socket) return;
   if (!buffer) return;
   if (buffer.length<1) return;
-  console.log('*** Recieved buffer :',buffer.toString().replace(String.fromCharCode(0),'#'));
+  Logger.log('*** Recieved buffer : ' + buffer.toString().replace(String.fromCharCode(0),'#'));
   for (var i=0; i<buffer.length; i++){
     this.parser.executeByte(buffer[i]);
     var executed = this.executeIfReadingFinished(this.executeOnReadingFinished.bind(this,buffer.slice(i+1)));
@@ -210,7 +212,7 @@ ConnectionHandler.prototype.onDataCatch = function (buffer) {
   try{
     ConnectionHandler.prototype.onData.call(this,buffer);
   }catch (err){
-    console.log('HANDLING REQUEST ERROR: ',err);
+    Logger.log('HANDLING REQUEST ERROR: ' + err);
     this.socketWriteError(err.toString());
     var s = this.socket;
     this.socket = null;

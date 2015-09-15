@@ -1,5 +1,7 @@
 'use strict';
 
+var Logger = require('./logger.js');
+
 var df = require('dateformat');
 
 var fixAcceptor = require('./fix/fixAcceptor.js');
@@ -26,7 +28,7 @@ var order = {
 };
 
 function execOnSuccess(msg){
-  console.log('(((***)))',msg);
+  Logger.log('(((***))) ' + msg);
 }
 
 //creating fixAcceptor
@@ -39,7 +41,7 @@ setTimeout(function(){
 },20000);
 
 function workSomething(){
-  console.log('alive!');
+  Logger.log('alive!');
   setTimeout(workSomething,5000);
 };
 

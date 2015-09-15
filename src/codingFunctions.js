@@ -1,5 +1,7 @@
 'use strict';
 
+var Logger = require('./logger.js');
+
 function Coder(){
   this.decodedTagRegexp = /^[1-9][0-9]*$/;
   this.codedTagRegexp = /^t[1-9][0-9]*$/;
@@ -35,7 +37,7 @@ Coder.prototype.decodeFIXmessage = function(codedElement){
   try{
     this.fixStructNames.forEach(this.decodeFIXstruct.bind(this,codedElement,decodedResult));
   }catch (err){
-    console.log('Error in decoding message - ',err);
+    Logger.log('Error in decoding message - ' + err);
     return undefined;
   }
   return decodedResult;
@@ -48,7 +50,7 @@ Coder.prototype.codeFIXmessage = function(decodedElement){
   try{
     this.fixStructNames.forEach(this.codeFIXstruct.bind(this,decodedElement,codedResult));
   }catch (err){
-    console.log('Error in decoding message - ',err);
+    Logger.log('Error in decoding message - ' + err);
     return undefined;
   }
   return codedResult;

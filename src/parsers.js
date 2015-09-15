@@ -1,5 +1,7 @@
 'use strict';
 
+var Logger = require('./logger.js');
+
 var BufferHandler = require('./bufferHandler.js');
 var Checkers = require('./checkers.js');
 
@@ -13,7 +15,7 @@ function IdleParser(maxBufferLength){
 IdleParser.prototype.destroy = function(){
   this.maxBufferLength = null; //default
   if (!!this.bufferHandler){
-    console.log('______ SPREMAM SE DA UNISTIM PARSERA, DO OVDE JE STIGO BUFHANDLER',this.bufferHandler.getLastWrittenIndex());
+    Logger.log('______ SPREMAM SE DA UNISTIM PARSERA, DO OVDE JE STIGO BUFHANDLER ' + this.bufferHandler.getLastWrittenIndex());
     this.bufferHandler.clearCache();
   }
   this.bufferHandler.destroy();
@@ -60,12 +62,12 @@ CredentialsParser.prototype.execute = function(bufferItem){
     //first zero - name
     if (this.zeroCnt === 1){
       this.name = this.bufferHandler.generateNextWord();
-      console.log('EVO MI GA NAME',this.name,'LENGTH',this.name.length);
+      Logger.log('EVO MI GA NAME ' + this.name + ' LENGTH ' + this.name.length);
     }
     //second zero - password 
     if (this.zeroCnt === 2){
       this.password = this.bufferHandler.generateNextWord();
-      console.log('EVO MI GA PASS',this.password,'LENGTH',this.password.length);
+      Logger.log('EVO MI GA PASS ' + this.password + ' LENGTH ' + this.password.length);
     }
   }
 };
@@ -99,11 +101,11 @@ SessionParser.prototype.destroy = function(){
 };
 
 SessionParser.prototype.execute = function(bufferItem){
-  console.log('DO SAD JE PROCITANO',this.bufferHandler.getLastWrittenIndex(),'bajta');
+  Logger.log('DO SAD JE PROCITANO ' + this.bufferHandler.getLastWrittenIndex() + ' bajta');
   if (this.doneReading()){
-    console.log('KOJI BAJT CITAM??',bufferItem);
+    Logger.log('KOJI BAJT CITAM?? ' + bufferItem);
     this.secret = this.bufferHandler.getBuffer().slice(0,16);
-    console.log('PROCITANO 16 BAJTA, dobijen ovaj secret :',this.secret);
+    Logger.log('PROCITANO 16 BAJTA, dobijen ovaj secret : ' + this.secret);
   }
 };
 
@@ -129,7 +131,7 @@ RequestParser.prototype = Object.create(IdleParser.prototype, {constructor:{
 
 //TODO check ALL destructors if they match constructor properties
 RequestParser.prototype.destroy = function(){
-  console.log('((((( REQUEST PARSER SE UBIJA )))))');
+  Logger.log('((((( REQUEST PARSER SE UBIJA )))))');
   if (!!this.byteWorker){
     this.byteWorker.destroy();
   }
@@ -152,7 +154,7 @@ RequestParser.prototype.reset = function(){
   }
   this.byteWorker = new MethodByteWorker();
   if (!!this.bufferHandler){
-    console.log('______ SPREMAM SE DA RESETUJEM PARSERA, DO OVDE JE STIGO BUFHANDLER',this.bufferHandler.getLastWrittenIndex());
+    Logger.log('______ SPREMAM SE DA RESETUJEM PARSERA, DO OVDE JE STIGO BUFHANDLER ' + this.bufferHandler.getLastWrittenIndex());
     this.bufferHandler.clearCache();
   }
 };
@@ -170,12 +172,12 @@ RequestParser.prototype.argumentByteWorkerFactory = function(operationName){
 };
 
 RequestParser.prototype.fixMsgSuccessfullySent = function(){
-  console.log('%%%%% FIX poruka je uspesno poslata i obavestavam clienta o tome!');
+  Logger.log('%%%%% FIX poruka je uspesno poslata i obavestavam clienta o tome!');
   this.myTcpParent.connectionHandler.socketWriteResult('successfully_sent');
 };
 
 RequestParser.prototype.fixInitiatorSuccessfullyStarted = function(){
-  console.log('%%%%% FIX initiator se startovao i obavestio clienta o tome!');
+  Logger.log('%%%%% FIX initiator se startovao i obavestio clienta o tome!');
   this.myTcpParent.connectionHandler.socketWriteResult('fix_initiator_started');
 };
 
@@ -197,7 +199,7 @@ RequestParser.prototype.zeroCntEqualsRequiredZeros = function(){
 
 RequestParser.prototype.callMethod = function(){
   if (!!this.operationName){
-    console.log('FINISHED reading arguments for',this.operationName,'method. Calling it...',this.reqArguments);
+    Logger.log('FINISHED reading arguments for ' + this.operationName + ' method. Calling it... ' + this.reqArguments);
     this.myTcpParent.callMethod(this.operationName,this.reqArguments);
   }
   this.reset();
@@ -216,7 +218,7 @@ ApplicationParser.prototype = Object.create(RequestParser.prototype, {constructo
 }});
 
 ApplicationParser.prototype.destroy = function(){
-  console.log('((((( APPLICATION PARSER SE UBIJA )))))');
+  Logger.log('((((( APPLICATION PARSER SE UBIJA )))))');
   this.firstChar = null;
   this.wordIndicator = null;
   this.error = null; 
@@ -251,14 +253,14 @@ ApplicationParser.prototype.execute = function(bufferItem){
     this.firstChar = false;
     if (bufferItem === 114){ //if r (result) we expect return message 
       this.wordIndicator = 'msg';
-      console.log('PROCITAO R, postavio wordIndicator na',this.wordIndicator);
+      Logger.log('PROCITAO R, postavio wordIndicator na ' + this.wordIndicator);
       this.byteWorker = new NextWordByteWorker();
     }else if(bufferItem === 101){ //if e (error) we expect error message
       this.wordIndicator = 'error';
-      console.log('PROCITAO E, postavio wordIndicator na',this.wordIndicator);
+      Logger.log('PROCITAO E, postavio wordIndicator na ' + this.wordIndicator);
       this.byteWorker = new NextWordByteWorker();
     }else if(bufferItem === 111){ //if o (event) we expect fix message
-      console.log('PROCITAO O, napravio MethodByteWorker');
+      Logger.log('PROCITAO O, napravio MethodByteWorker');
       this.byteWorker = new MethodByteWorker();
       this.bufferHandler.skipByteOnNextWord();
     }else{
@@ -339,13 +341,13 @@ MethodByteWorker.prototype.eatByte = function(bufferItem,parser){
     parser.zeroCnt++;
     parser.operationName = parser.bufferHandler.generateNextWord();
     if (parser.myTcpParent.methods.isImplemented(parser.operationName)){
-      console.log('METHOD',parser.operationName,'exists and requires',parser.myTcpParent.methods.getParamCnt(parser.operationName),'params');
+      Logger.log('METHOD ' + parser.operationName + ' exists and requires ' + parser.myTcpParent.methods.getParamCnt(parser.operationName) + ' params');
       parser.requiredZeros += parser.myTcpParent.methods.getParamCnt(parser.operationName);
       parser.byteWorker.destroy();
       parser.byteWorker = parser.argumentByteWorkerFactory(parser.operationName);
     }else{
       parser.requiredZeros = undefined;
-      console.log('STA BRE',parser.operationName);
+      Logger.log('STA BRE ' + parser.operationName);
       throw new Error(parser.operationName + 'method is not implemented');
     }
   }
@@ -369,9 +371,9 @@ StringByteWorker.prototype.eatByte = function(bufferItem,parser){
   if (bufferItem === 0){
     parser.zeroCnt++;
     var argument = parser.bufferHandler.generateNextWord();
-    console.log('GENERISAO SAM OVU REC',argument);
+    Logger.log('GENERISAO SAM OVU REC ' + argument);
     parser.reqArguments.push(argument);
-    console.log('EVO SU TRENUTNI ARGUMENTI',parser.reqArguments);
+    Logger.log('EVO SU TRENUTNI ARGUMENTI ' + parser.reqArguments);
   }
 };
 
@@ -384,7 +386,7 @@ function TagValueByteWorker(objForFillCtor){
   this.zeroCnt = 0;
   this.tagsCnt = 0;
   ByteWorker.call(this);
-  console.log('NAPRAVLJEN TagValueByteWorker!!!');
+  Logger.log('NAPRAVLJEN TagValueByteWorker!!!');
 }
 
 TagValueByteWorker.prototype = Object.create(ByteWorker.prototype, {constructor:{

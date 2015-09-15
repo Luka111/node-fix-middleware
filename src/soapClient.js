@@ -1,5 +1,7 @@
 'use strict';
 
+var Logger = require('./logger.js');
+
 var soap = require('soap');
 
 var Coder = require('./codingFunctions.js');
@@ -22,7 +24,7 @@ soapClient.prototype.LogDescribeInit = function(err,client){
   if (err){
     throw err;
   }
-  console.log('DESCRIBE:',client.describe());
+  Logger.log('DESCRIBE: ' + client.describe());
 };
 
 soapClient.prototype.echo = function(args){
@@ -68,7 +70,7 @@ soapClient.prototype.sendFixMsgHandler = function(err,result){
       throw err;
     }
   }
-  console.log('Result : ',result.msg);
+  Logger.log('Result : ' + result.msg);
 };
 
 soapClient.prototype.recieveFixMessages = function(){
@@ -99,7 +101,7 @@ soapClient.prototype.recieveFixMessagesHandler = function(err,result){
       decodedResult.push(decodedElement);
     }
   }
-  console.log('EVO DECODOVANE FIX PORUKE U NIZU',JSON.stringify(decodedResult));
+  Logger.log('EVO DECODOVANE FIX PORUKE U NIZU ' + JSON.stringify(decodedResult));
   return result;
 };
 
@@ -115,7 +117,7 @@ soapClient.prototype.startFixInitiatorHandler = function(err,result){
   if (!!err){
     throw err;
   }
-  console.log('Successfully started FIX initiator!');
+  Logger.log('Successfully started FIX initiator!');
   return result;
 };
 

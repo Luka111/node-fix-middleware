@@ -1,5 +1,7 @@
 'use strict';
 
+var Logger = require('./logger.js');
+
 function BufferHandler(){
   this.cache = null; //will become buffer if necessery
   this.lastWrittenIndex = 0;
@@ -45,11 +47,11 @@ BufferHandler.prototype.checkCache = function(buffer){
   }
   if(this.cache.length == this.lastWrittenIndex){ //full
     //TODO test doubling cache
-    console.log('CACHE TOO SMALL, SIZE: ' + this.cache.length);
+    Logger.log('CACHE TOO SMALL, SIZE: ' + this.cache.length);
     var newCache = new Buffer(2 * this.cache.length);
     this.cache.copy(newCache);
     this.cache = newCache;
-    console.log('CACHE DOUBLED, SIZE: ' + this.cache.length);
+    Logger.log('CACHE DOUBLED, SIZE: ' + this.cache.length);
   }
 }
 

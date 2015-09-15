@@ -1,5 +1,7 @@
 'use strict';
 
+var Logger = require('./logger.js');
+
 var soap = require('soap');
 var http = require('http');
 var fs = require('fs');
@@ -76,7 +78,7 @@ soapServer.prototype.createServer = function(req,res){
 };
 
 soapServer.prototype.serverLogging = function(type,data){
-  console.log(type.toUpperCase() + ': ' + data);
+  Logger.log(type.toUpperCase() + ': ' + data);
 };
 
 soapServer.prototype.start = function(port){
@@ -148,8 +150,8 @@ soapServer.prototype.sendDecodedFixMsg = function(decodedMsg,cb){
     this.fixInitiator.send(decodedMsg); 
     cb({msg : 'Successfully sent!!!'});
   }catch(err){
-    console.log('ERROR: ',err);
-    console.log('Resending msg in 5sec...');
+    Logger.log('ERROR: ' + err);
+    Logger.log('Resending msg in 5sec...');
     setTimeout(this.sendDecodedFixMsg.bind(this,decodedMsg,cb),5000);
   }
 };

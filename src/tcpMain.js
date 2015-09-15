@@ -1,8 +1,10 @@
 'use strict';
 
+var Logger = require('./logger.js');
+
 var df = require('dateformat');
 
-var tcpServer = require('./tcpServer.js');
+var tcpServer = require('./tcpTestServer.js');
 var tcpClient = require('./tcpClient.js');
 var fixAcceptor = require('./fix/fixAcceptor.js');
 
@@ -39,7 +41,7 @@ var invalidOrder = {
 };
 
 function execOnSuccess(msg){
-  console.log('<***>',msg);
+  Logger.log('<***> ' + msg);
 }
 
 //creating fixAcceptor
@@ -57,13 +59,13 @@ var options = {
   port: 14000
 };
 
-  function generate300CharsWord(){
-    var ret = '';
-    for (var i=0; i<300; i++){
-      ret += 'a';
-    }
-    return ret;
+function generate300CharsWord(){
+  var ret = '';
+  for (var i=0; i<300; i++){
+    ret += 'a';
   }
+  return ret;
+}
 
 //credentials
 var name = 'luka';

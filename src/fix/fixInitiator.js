@@ -1,5 +1,7 @@
 'use strict';
 
+var Logger = require('../logger.js');
+
 var df = require('dateformat');
 var events = require('events');
 var quickfix = require('node-quickfix');
@@ -65,7 +67,7 @@ Initiator.prototype.start = function(cb){
 };
 
 Initiator.prototype.successfullyStarted = function(cb){
-  console.log('FIX Initiator Started');
+  Logger.log('FIX Initiator Started');
   this.started = true;
   cb();
 };
@@ -92,11 +94,10 @@ Initiator.prototype.send = function(cb,msg){
   }
   this.quickfixInitiator.send(msg,this.successfullySent.bind(this,cb));
   var session = this.quickfixInitiator.getSessions()[0];
-  console.log('<<<<<< DA LI POSTOJIM',session);
 };
 
 Initiator.prototype.successfullySent = function(cb){
-  console.log('INITIATOR: Message successfully sent!');
+  Logger.log('INITIATOR: Message successfully sent!');
   cb();
 };
 

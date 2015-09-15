@@ -122,7 +122,7 @@ tcpFixServer.prototype.sendCheckedMsg = function(cb,msg){
     this.fixInitiator.send(cb,msg);
   }catch(err){
     Logger.log('ERROR from FIX initiator: ' + err);
-    Logger.log('Resending msg in 5sec... ' + JSON.stringify(msg));
+    Logger.log('Resending msg in 5sec... ' + msg);
     setTimeout(this.sendCheckedMsg.bind(this,cb,msg),5000);
   }
 };
@@ -262,8 +262,8 @@ CredentialsHandler.prototype.destroy = function(){
   ConnectionHandler.prototype.destroy.call(this);
 };
 
-//override, adding catch functionallity
-CredentialsHandler.prototype.onData = ConnectionHandler.prototype.onDataCatch;
+//override, adding catch functionallity - REMOVED IN TEST SERVER
+//CredentialsHandler.prototype.onData = ConnectionHandler.prototype.onDataCatch;
 
 CredentialsHandler.prototype.readingFinished = function(){
   return this.parser.getZeroCnt() === 2; //reading until 2 zeros
@@ -308,8 +308,8 @@ SessionHandler.prototype.destroy = function(){
   ConnectionHandler.prototype.destroy.call(this);
 };
 
-//override, adding catch functionallity
-SessionHandler.prototype.onData = ConnectionHandler.prototype.onDataCatch;
+//override, adding catch functionallity - REMOVED IN TEST SERVER
+//SessionHandler.prototype.onData = ConnectionHandler.prototype.onDataCatch;
 
 SessionHandler.prototype.readingFinished = function(){
   return this.parser.doneReading();
@@ -353,8 +353,8 @@ RequestHandler.prototype.destroy = function(){
   ConnectionHandler.prototype.destroy.call(this);
 };
 
-//override, adding catch functionallity
-RequestHandler.prototype.onData = ConnectionHandler.prototype.onDataCatch;
+//override, adding catch functionallity - REMOVED IN TEST SERVER
+//RequestHandler.prototype.onData = ConnectionHandler.prototype.onDataCatch;
 
 RequestHandler.prototype.readingFinished = function(){
   return this.parser.zeroCntEqualsRequiredZeros();

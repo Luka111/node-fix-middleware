@@ -1,5 +1,7 @@
 'use strict';
 
+var Logger = require('./logger.js');
+
 var net = require('net');
 var df = require('dateformat');
 
@@ -90,7 +92,7 @@ tcpClient.prototype.acceptFixMsg = function(args){
   if (typeof msg !== 'object'){
     throw new Error('sendFixMsg requires object as the first param! - ' + msg);
   }
-  console.log('!=!=!=!=****!=!=!=! DOBIO SAM OVU FIX PORUKU SA SERVERA',msg);
+  Logger.log('!=!=!=!=****!=!=!=! DOBIO SAM OVU FIX PORUKU SA SERVERA ' + msg);
 }
 
 tcpClient.prototype.connectionEstablished = function(args){
@@ -125,21 +127,21 @@ tcpClient.prototype.connectionClosed = function(args){
 
 tcpClient.prototype.execute = function(cb){
   if (!cb){
-    console.log('&&& Nema metode za izvrsiti!');
+    Logger.log('&&& Nema metode za izvrsiti!');
     return;
   }
   if (!this.executingAvailable){
-    console.log('&&& Metoda se trenutno ne moze izvrsiti, na cekanje!');
+    Logger.log('&&& Metoda se trenutno ne moze izvrsiti, na cekanje!');
     this.waitingCallbacks.push(cb);
   }else{
-    console.log('&&& Izvrsavam metodu i blokiram sve ostale pozive!');
+    Logger.log('&&& Izvrsavam metodu i blokiram sve ostale pozive!');
     cb.call(this);
     this.executingAvailable = false;
   }
 };
 
 tcpClient.prototype.executeNextMethod = function(){
-  console.log('&&& Dozvoljavam sve pozive i zovem sledecu metodu (ako je ima ;))!');
+  Logger.log('&&& Dozvoljavam sve pozive i zovem sledecu metodu (ako je ima ;))!');
   this.executingAvailable = true;
   this.execute(this.waitingCallbacks.shift());
 };
@@ -186,7 +188,7 @@ CarpetConnectionHandler.prototype.onData = function(buffer){
   if (!this.socket) return;
   if (!buffer) return;
   if (buffer[0] === 114){ //if r (result) we expect secret
-    console.log('CARPET: Prvo slovo jeste R, instanciram PlainConnectionHandler!');
+    Logger.log('CARPET: Prvo slovo jeste R, instanciram PlainConnectionHandler!');
     var myTcpParent = this.myTcpParent;
     var socket = this.socket;
     var settings = this.settings;
@@ -285,9 +287,9 @@ SecretConnectionHandler.prototype.readingFinished = function(){
 
 SecretConnectionHandler.prototype.executeOnReadingFinished = function(){
   var error = this.parser.getError();
-  console.log('STA JE ERROR',error);
+  Logger.log('STA JE ERROR ' + error);
   if (!!error){
-    console.log('CLIENT: Error',error);
+    Logger.log('CLIENT: Error ' + error);
     var s = this.socket;
     s.destroy();
     this.socket = null;
@@ -309,7 +311,7 @@ SecretConnectionHandler.prototype.executeOnReadingFinished = function(){
       this.executor = new FixMsgExecutor(this);
       break; 
     case 'successfully_sent':
-      console.log('Uspesno poslata FIX poruka!');
+      Logger.log('Uspesno poslata FIX poruka!');
       this.myTcpParent.executeNextMethod();
       break; 
   }
