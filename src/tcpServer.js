@@ -157,6 +157,8 @@ tcpFixServer.prototype.fromAppListener = function(emitter,msg,sessionID){
 //Intern methods
 
 tcpFixServer.prototype.start = function(port){
+  if (!port) throw new Error ('No port provided!');
+  if (typeof port !== 'number') throw new Error('Port must be a number!');
   this.server.listen(port,this.onListening.bind(this));
 };
 

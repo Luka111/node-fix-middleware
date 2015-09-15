@@ -338,7 +338,6 @@ MethodByteWorker.prototype.eatByte = function(bufferItem,parser){
   if (bufferItem === 0){
     parser.zeroCnt++;
     parser.operationName = parser.bufferHandler.generateNextWord();
-    console.log('STA JE PARSER',parser);
     if (parser.myTcpParent.methods.isImplemented(parser.operationName)){
       console.log('METHOD',parser.operationName,'exists and requires',parser.myTcpParent.methods.getParamCnt(parser.operationName),'params');
       parser.requiredZeros += parser.myTcpParent.methods.getParamCnt(parser.operationName);
@@ -395,7 +394,6 @@ TagValueByteWorker.prototype = Object.create(ByteWorker.prototype, {constructor:
 }});
 
 TagValueByteWorker.prototype.destroy = function(){
-  console.log('((((( TagValueByteWorker SE UBIJA )))))');
   this.tagsCnt = null;
   this.zeroCnt = null
   this.objForFill.destroy();
@@ -432,7 +430,6 @@ TagByteWorker.prototype = Object.create(ByteWorker.prototype, {constructor:{
 }});
 
 TagByteWorker.prototype.destroy = function(){
-  console.log('((((( TagByteWorker SE UBIJA )))))');
   ByteWorker.prototype.destroy.call(this);
 };
 
@@ -444,18 +441,13 @@ TagByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker){
       if (!parentByteWorker.objForFill.fixTagRegexp.test(parentByteWorker.tag)){
         throw new Error('Invalid FIX message structure: tag value ' + parentByteWorker.tag + ' is incorrect');
       }
-      console.log('TagByteWorker zavrsio posao i napravio',parentByteWorker.tag,'predaje stafetu ValueByteWorker');
       parentByteWorker.byteWorker.destroy();
       parentByteWorker.byteWorker = new ValueByteWorker(); 
     }else if (parentByteWorker.zeroCnt === 1){
-      console.log('Procitao nulu za kraj fix taga!',parentByteWorker.tagsCnt,'prelazi se na sledeci tag',parentByteWorker.tagsCnt);
       parentByteWorker.zeroCnt++;
       parentByteWorker.tagsCnt++;
     }else if (parentByteWorker.zeroCnt === 2){
-      console.log('Procitao nulu za kraj celog argumenta, prelazi se na sledeci');
-      console.log('OVO CU DA GURNEM U ARGUMENTE',parentByteWorker.objForFill);
       parser.reqArguments.push(parentByteWorker.objForFill);
-      console.log('EVO SU ARGUMENTI :)',parser.reqArguments);
       parser.zeroCnt++;
       parser.byteWorker.reset(); 
     }
@@ -487,7 +479,6 @@ ValueByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker)
       throw new Error('Invalid FIX message structure: end of request expected, instead got tag/value - { ' + parentByteWorker.tag + ':' + parentByteWorker.value + ' } ');
     }
     parentByteWorker.objForFill[parentByteWorker.objForFill.tagsArray[parentByteWorker.tagsCnt]][parentByteWorker.tag] = parentByteWorker.value;
-    console.log('ValueByteWorker zavrsio posao i napravio',parentByteWorker.value,'prepusta stefetu TagByteWorker');
     parentByteWorker.tag = '';
     parentByteWorker.value = '';
     parentByteWorker.byteWorker.destroy();

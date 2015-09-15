@@ -33,6 +33,15 @@ ServerEventHandler.prototype.destroy = function(){
 //tcp Client
 
 function tcpClient(options,name,password,settings){
+  if (!options) throw new Error('No options provided!');
+  if (typeof options !== 'object') throw new Error('options must be object!');
+  if (!options.hasOwnProperty('port')) throw new Error('options must have property port');
+  if (!name) throw new Error('No name provided!');
+  if (typeof name !== 'string') throw new Error('name must be string!');
+  //it is possible for password to be an empty string
+  if (typeof password !== 'string') throw new Error('password must be string!');
+  if (!settings) throw new Error('No settings provided!');
+  if (typeof settings !== 'string') throw new Error('settings must be string!');
   this.methods = new ServerEventHandler();
   this.methods.acceptFixMsg = this.acceptFixMsg.bind(this);
   this.methods.connectionEstablished = this.connectionEstablished.bind(this);
@@ -56,6 +65,12 @@ tcpClient.prototype.destroy = function(){
   this.methods.destroy();
   this.methods = null;
   //TODO remove, testing
+};
+
+//methods for extern usage
+
+tcpClient.prototype.sendFixMsg = function(msg){
+  this.execute(this.sendFIXMessage.bind(this,msg));
 };
 
 tcpClient.prototype.callMethod = function(methodName,reqArguments){

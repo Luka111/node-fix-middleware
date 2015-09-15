@@ -25,9 +25,7 @@ BufferHandler.prototype.getBuffer = function(){
 BufferHandler.prototype.generateNextWord = function(){
   while (this.cache[this.lastWrittenWordIndex] === 0) this.lastWrittenWordIndex++; //always generate words without zeros at the beginning
   var word = this.cache.slice(this.lastWrittenWordIndex, this.lastWrittenIndex - 1);
-  console.log('IZGENERISAO SAM OVU REC',word.toString(),'ovo je bio wordindex',this.lastWrittenWordIndex);
   this.lastWrittenWordIndex = this.lastWrittenIndex;
-  console.log('A posle ovo wordindex',this.lastWrittenWordIndex);
   return word.toString();
 };
 

@@ -12,8 +12,8 @@ var order = {
   header: {
     8: 'FIX.4.4',
     35: 'D',
-    49: 'ELECTRONIFIE',
-    56: 'NODEQUICKFIX'
+    49: 'NODEQUICKFIX',
+    56: 'ELECTRONIFIE'
   },
   tags: {
     11: '0E0Z86K00000',
@@ -64,21 +64,10 @@ var password = 'kp';
 //starting client
 var client = new tcpClient(options,name,password,settings);
 
-function sendFIXMessage(){
-  this.sendFIXMessage(order);
-}
-
-function sendIncorrectFIXMessage(){
-  this.sendFIXMessage(invalidOrder);
-}
-
 //client.execute(sendIncorrectFIXMessage);
 /*
 for (var i=0; i<1000; i++){
   client.execute(sendFIXMessage);
 }
 */
-client.execute(sendFIXMessage);
-//client.execute(sendFIXMessage);
-//client.execute(sendFIXMessage);
-//client.execute(sendFIXMessage);
+  client.sendFixMsg(order);
