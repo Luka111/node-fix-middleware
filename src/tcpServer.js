@@ -260,6 +260,9 @@ CredentialsHandler.prototype.destroy = function(){
   ConnectionHandler.prototype.destroy.call(this);
 };
 
+//override, adding catch functionallity
+CredentialsHandler.prototype.onData = ConnectionHandler.prototype.onDataCatch;
+
 CredentialsHandler.prototype.readingFinished = function(){
   return this.parser.getZeroCnt() === 2; //reading until 2 zeros
 };
@@ -302,6 +305,9 @@ SessionHandler.prototype.destroy = function(){
   this.continueAfterExecute = null;
   ConnectionHandler.prototype.destroy.call(this);
 };
+
+//override, adding catch functionallity
+SessionHandler.prototype.onData = ConnectionHandler.prototype.onDataCatch;
 
 SessionHandler.prototype.readingFinished = function(){
   return this.parser.doneReading();
@@ -346,19 +352,7 @@ RequestHandler.prototype.destroy = function(){
 };
 
 //override, adding catch functionallity
-RequestHandler.prototype.onData = function (buffer) {
-  try{
-    ConnectionHandler.prototype.onData.call(this,buffer);
-  }catch (err){
-    console.log('HANDLING REQUEST ERROR: ',err);
-    this.socketWriteError(err.toString());
-    var s = this.socket;
-    this.socket = null;
-    s.end();
-    s.destroy();
-    return;
-  }
-};
+RequestHandler.prototype.onData = ConnectionHandler.prototype.onDataCatch;
 
 RequestHandler.prototype.readingFinished = function(){
   return this.parser.zeroCntEqualsRequiredZeros();

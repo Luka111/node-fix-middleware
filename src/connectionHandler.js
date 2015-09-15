@@ -192,20 +192,6 @@ ConnectionHandler.prototype.socketWriteEvent = function(eventName,msg){
 };
 
 //template method
-/*
-ConnectionHandler.prototype.onData = function (buffer) {
-  if (!this.socket) return;
-  if (!buffer) return;
-  console.log('*** Recieved buffer :',buffer.toString().replace(String.fromCharCode(0),'#'));
-  for (var i=0; i<buffer.length; i++){
-    this.parser.executeByte(buffer[i]);
-    var executed = this.executeIfReadingFinished(this.executeOnReadingFinished.bind(this,buffer));
-    if (!!executed && !this.continueAfterExecute){
-      return;
-    }
-  }
-};
-*/
 ConnectionHandler.prototype.onData = function(buffer) {
   if (!this.socket) return;
   if (!buffer) return;
@@ -217,6 +203,20 @@ ConnectionHandler.prototype.onData = function(buffer) {
     if (!!executed && !this.continueAfterExecute){
       return;
     }
+  }
+};
+
+ConnectionHandler.prototype.onDataCatch = function (buffer) {
+  try{
+    ConnectionHandler.prototype.onData.call(this,buffer);
+  }catch (err){
+    console.log('HANDLING REQUEST ERROR: ',err);
+    this.socketWriteError(err.toString());
+    var s = this.socket;
+    this.socket = null;
+    s.end();
+    s.destroy();
+    return;
   }
 };
 

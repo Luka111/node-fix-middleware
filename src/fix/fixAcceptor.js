@@ -55,6 +55,9 @@ Acceptor.prototype.destroy = function(){
 };
 
 Acceptor.prototype.start = function(cb){
+  if (typeof cb !== 'function' && cb !== null){
+    throw new Error('start accepts function or null as the first param!');
+  }
   this.quickfixAcceptor.start(this.successfullyStarted.bind(this,cb));
 };
 

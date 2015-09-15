@@ -57,6 +57,14 @@ var options = {
   port: 14000
 };
 
+  function generate300CharsWord(){
+    var ret = '';
+    for (var i=0; i<300; i++){
+      ret += 'a';
+    }
+    return ret;
+  }
+
 //credentials
 var name = 'luka';
 var password = 'kp';
@@ -70,4 +78,4 @@ for (var i=0; i<1000; i++){
   client.execute(sendFIXMessage);
 }
 */
-  client.sendFixMsg(order);
+client.sendFixMsg(order);
