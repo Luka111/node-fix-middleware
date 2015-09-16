@@ -429,6 +429,7 @@ FixMsgExecutor.prototype.sendFIXMessage = function(fixMsg){
     throw new Error('sendFIXMessage: fixMsg param must contain property header');
   }
   var codedFixMsg = Coder.createZeroDelimitedFixMsg(fixMsg);
+  console.log('EVO PRIMER FIX PORUKE',codedFixMsg.replace(String.fromCharCode(0),'#'));
   this.handler.sendMethodBuffer(codedFixMsg, 'sendFixMsg');
 };
 

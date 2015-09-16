@@ -50,7 +50,6 @@ ConnectionHandler.prototype.onError = function(){
 
 ConnectionHandler.prototype.onClose = function(){
   Logger.log('Handler:  Socket closed!');
-  var myTcpParent = this.myTcpParent;
   this.destroy();
 };
 

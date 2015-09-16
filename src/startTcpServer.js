@@ -1,6 +1,6 @@
 'use strict';
 
-var tcpServer = require('./tcpTestServer.js');
+var tcpServer = require('./tcpServer.js');
 
 //creating server
 var server = new tcpServer();
