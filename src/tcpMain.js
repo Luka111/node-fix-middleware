@@ -67,7 +67,7 @@ function generate300CharsWord(){
   return ret;
 }
 
-//credentials
+//credentials - !
 var name = 'luka';
 var password = 'kp';
 
