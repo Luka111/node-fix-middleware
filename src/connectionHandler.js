@@ -12,7 +12,6 @@ function ConnectionHandler(socket, buffer, myTcpParent, parser) {
   socket.on('data', this.onData.bind(this));
   this.socket = socket;
   this.myTcpParent = myTcpParent;
-  this.myTcpParent.connectionHandler = this;
   this.executor = null; //TODO put server methods right here!
   this.continueAfterExecute = true;
   this.parser = parser;
@@ -30,11 +29,6 @@ ConnectionHandler.prototype.destroy = function () {
     this.executor.destroy();
   }
   this.executor = null;
-  if (!!this.myTcpParent) {
-    if (this.myTcpParent.connectionHandler === this){
-      this.myTcpParent.connectionHandler = null;
-    }
-  }
   this.myTcpParent = null;
   this.socket = null;
 };

@@ -117,8 +117,8 @@ SessionParser.prototype.getSecret = function(){
   return this.secret;
 };
 
-function RequestParser(myTcpParent){ // Connection handler is needed for notifying client
-  this.myTcpParent = myTcpParent;
+function RequestParser(connectionHandler){ // Connection handler is needed for notifying client
+  this.myConnectionHandler = connectionHandler;
   this.reset();
   IdleParser.call(this,2048);
 }
@@ -140,7 +140,7 @@ RequestParser.prototype.destroy = function(){
   this.zeroCnt = null;
   this.reqArguments = null;
   this.operationName = null; 
-  this.myTcpParent = null;
+  this.myConnectionHandler = null;
   IdleParser.prototype.destroy.call(this);
 };
 
@@ -173,12 +173,12 @@ RequestParser.prototype.argumentByteWorkerFactory = function(operationName){
 
 RequestParser.prototype.fixMsgSuccessfullySent = function(){
   Logger.log('%%%%% FIX poruka je uspesno poslata i obavestavam clienta o tome!');
-  this.myTcpParent.connectionHandler.socketWriteResult('successfully_sent');
+  this.myConnectionHandler.socketWriteResult('successfully_sent');
 };
 
 RequestParser.prototype.fixInitiatorSuccessfullyStarted = function(){
   Logger.log('%%%%% FIX initiator se startovao i obavestio clienta o tome!');
-  this.myTcpParent.connectionHandler.socketWriteResult('fix_initiator_started');
+  this.myConnectionHandler.socketWriteResult('fix_initiator_started');
 };
 
 RequestParser.prototype.execute = function(bufferItem){
@@ -200,15 +200,16 @@ RequestParser.prototype.zeroCntEqualsRequiredZeros = function(){
 RequestParser.prototype.callMethod = function(){
   if (!!this.operationName){
     Logger.log('FINISHED reading arguments for ' + this.operationName + ' method. Calling it... ' + this.reqArguments);
-    this.myTcpParent.callMethod(this.operationName,this.reqArguments);
+    this.reqArguments.push(this.myConnectionHandler);
+    this.myConnectionHandler.myTcpParent.callMethod(this.operationName,this.reqArguments);
   }
   this.reset();
 };
 
 //Application parser for TCP client
 
-function ApplicationParser(myTcpParent){
-  RequestParser.call(this,myTcpParent);
+function ApplicationParser(connectionHandler){
+  RequestParser.call(this,connectionHandler);
 }
 
 ApplicationParser.prototype = Object.create(RequestParser.prototype, {constructor:{
@@ -340,9 +341,9 @@ MethodByteWorker.prototype.eatByte = function(bufferItem,parser){
   if (bufferItem === 0){
     parser.zeroCnt++;
     parser.operationName = parser.bufferHandler.generateNextWord();
-    if (parser.myTcpParent.methods.isImplemented(parser.operationName)){
-      Logger.log('METHOD ' + parser.operationName + ' exists and requires ' + parser.myTcpParent.methods.getParamCnt(parser.operationName) + ' params');
-      parser.requiredZeros += parser.myTcpParent.methods.getParamCnt(parser.operationName);
+    if (parser.myConnectionHandler.myTcpParent.methods.isImplemented(parser.operationName)){
+      Logger.log('METHOD ' + parser.operationName + ' exists and requires ' + parser.myConnectionHandler.myTcpParent.methods.getParamCnt(parser.operationName) + ' params');
+      parser.requiredZeros += parser.myConnectionHandler.myTcpParent.methods.getParamCnt(parser.operationName);
       parser.byteWorker.destroy();
       parser.byteWorker = parser.argumentByteWorkerFactory(parser.operationName);
     }else{

@@ -57,13 +57,9 @@ function tcpClient(options,name,password,settings){
 }
 
 tcpClient.prototype.destroy = function(){
-  if (!!this.connectionHandler){
-    this.connectionHandler.destroy();
-  }
   this.waitingCallbacks = null;
   this.executingAvailable = null;
   this.options = null;
-  this.connectionHandler = null;
   this.methods.destroy();
   this.methods = null;
   //TODO remove, testing
@@ -85,12 +81,16 @@ tcpClient.prototype.acceptFixMsg = function(args){
   if (!(args instanceof Array)){
     throw new Error('sendFixMsg accepts array of params');
   }
-  if (args.length !== 1){
+  if (args.length !== 2){
     throw new Error('sendFixMsg requires exactly 1 param');
   }
   var msg = args[0];
   if (typeof msg !== 'object'){
     throw new Error('sendFixMsg requires object as the first param! - ' + msg);
+  }
+  var connHandler = args[1];
+  if (!(connHandler instanceof SecretConnectionHandler)){
+    throw new Error('sendFixMsg requires SecretConnectionHandler as the second param! - ' + connHandler);
   }
   Logger.log('!=!=!=!=****!=!=!=! DOBIO SAM OVU FIX PORUKU SA SERVERA ' + msg);
 }
@@ -99,32 +99,41 @@ tcpClient.prototype.connectionEstablished = function(args){
   if (!(args instanceof Array)){
     throw new Error('connectionEstablished accepts array of params');
   }
-  if (args.length !== 1){
+  if (args.length !== 2){
     throw new Error('connectionEstablished requires exactly 1 param');
   }
   var sessionID = args[0];
   if (typeof sessionID !== 'object'){
     throw new Error('connectionEstablished requires object as the first param! - ' + sessionID);
   }
-  this.executeNextMethod();
+  var connHandler = args[1];
+  if (!(connHandler instanceof SecretConnectionHandler)){
+    throw new Error('connectionEstablished requires SecretConnectionHandler as the second param! - ' + connHandler);
+  }
+  this.executeNextMethod(connHandler);
 }
 
 tcpClient.prototype.connectionClosed = function(args){
   if (!(args instanceof Array)){
     throw new Error('connectionClosed accepts array of params');
   }
-  if (args.length !== 1){
+  if (args.length !== 2){
     throw new Error('connectionClosed requires exactly 1 param');
   }
   var sessionID = args[0];
   if (typeof sessionID !== 'object'){
     throw new Error('connectionClosed requires object as the first param! - ' + sessionID);
   }
+  var connHandler = args[1];
+  if (!(connHandler instanceof SecretConnectionHandler)){
+    throw new Error('connectionEstablished requires SecretConnectionHandler as the second param! - ' + connHandler);
+  }
+  Logger.log('Connection CLOSED!');
 }
 
 //Wrapper around connectionHandler executor 
 
-tcpClient.prototype.execute = function(cb){
+tcpClient.prototype.execute = function(cb,connectionHandler){
   if (!cb){
     Logger.log('&&& Nema metode za izvrsiti!');
     return;
@@ -134,20 +143,20 @@ tcpClient.prototype.execute = function(cb){
     this.waitingCallbacks.push(cb);
   }else{
     Logger.log('&&& Izvrsavam metodu i blokiram sve ostale pozive!');
-    cb.call(this);
+    cb.call(this,connectionHandler);
     this.executingAvailable = false;
   }
 };
 
-tcpClient.prototype.executeNextMethod = function(){
+tcpClient.prototype.executeNextMethod = function(connectionHandler){
   Logger.log('&&& Dozvoljavam sve pozive i zovem sledecu metodu (ako je ima ;))!');
   this.executingAvailable = true;
-  this.execute(this.waitingCallbacks.shift());
+  this.execute(this.waitingCallbacks.shift(),connectionHandler);
 };
 
-tcpClient.prototype.sendFIXMessage = function(msg){
-  if (this.connectionHandler && this.connectionHandler.executor){
-    this.connectionHandler.executor.sendFIXMessage(msg);
+tcpClient.prototype.sendFIXMessage = function(msg, connectionHandler){
+  if (!!connectionHandler && !!connectionHandler.executor){
+    connectionHandler.executor.sendFIXMessage(msg);
   }
 };
 
@@ -256,7 +265,7 @@ PlainConnectionHandler.prototype.executeOnReadingFinished = function(){
 
 function SecretConnectionHandler(socket,buffer,myTcpParent,secret,settings){
   this.settings = settings;
-  ConnectionHandler.call(this,socket,buffer,myTcpParent,new Parsers.ApplicationParser(myTcpParent));
+  ConnectionHandler.call(this,socket,buffer,myTcpParent,new Parsers.ApplicationParser(this));
   //this.socketWriteSecret(secret.toString());
   this.socket.write('s');
   this.socket.write(secret);
@@ -315,11 +324,11 @@ SecretConnectionHandler.prototype.executeOnReadingFinished = function(){
       }
       this.executor = new FixMsgExecutor(this);
       Logger.log('FIX initiator already started!');
-      this.myTcpParent.executeNextMethod();
+      this.myTcpParent.executeNextMethod(this);
       break; 
     case 'successfully_sent':
       Logger.log('Uspesno poslata FIX poruka!');
-      this.myTcpParent.executeNextMethod();
+      this.myTcpParent.executeNextMethod(this);
       break; 
   }
   this.parser.callMethod(this);
