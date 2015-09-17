@@ -49,8 +49,8 @@ var options = {
 };
 
 //credentials - !
-var name = 'luka';
-var password = 'kp';
+var name = 'indata';
+var password = '123';
 
 //starting client
 var client = new tcpClient(options,name,password,settings);

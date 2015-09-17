@@ -11,6 +11,7 @@ var Listeners = require('./listeners.js');
 var Parsers = require('./parsers.js');
 var Coder = require('./codingFunctions.js');
 var MethodStore = require('./methodStore.js');
+var CredentialsChecker = require('../misc/credentialsChecker');
 
 function ServerMethods(){
   this.startFixInitiator = null;
@@ -32,7 +33,7 @@ ServerMethods.prototype.destroy = function(){
   MethodStore.prototype.destroy.call(this);
 };
 
-function tcpFixServer(){
+function TcpFixServer(){
   this.methods = new ServerMethods();
   //TODO add methods
   this.methods.startFixInitiator = this.startFixInitiator.bind(this);
@@ -47,7 +48,7 @@ function tcpFixServer(){
   this.executingMethod = false;
 };
 
-tcpFixServer.prototype.destroy = function(){
+TcpFixServer.prototype.destroy = function(){
   this.executingMethod = null;
   this.connectionHandler = null;
   this.listeners.destroy();
@@ -62,7 +63,7 @@ tcpFixServer.prototype.destroy = function(){
   this.methods = null;
 };
 
-tcpFixServer.prototype.callMethod = function(methodName,reqArguments){
+TcpFixServer.prototype.callMethod = function(methodName,reqArguments){
   if (this.executingMethod){
     this.connectionHandler.socketWriteError('executing_method');
     return;
@@ -74,7 +75,7 @@ tcpFixServer.prototype.callMethod = function(methodName,reqArguments){
 
 //RMI
 
-tcpFixServer.prototype.startFixInitiator = function(args){
+TcpFixServer.prototype.startFixInitiator = function(args){
   if (!(args instanceof Array)){
     throw 'startFixInitiator accepts array of params';
   }
@@ -105,7 +106,7 @@ tcpFixServer.prototype.startFixInitiator = function(args){
   }
 };
 
-tcpFixServer.prototype.sendFixMsg = function(args){
+TcpFixServer.prototype.sendFixMsg = function(args){
   if (!(args instanceof Array)){
     throw new Error('sendFixMsg accepts array of params');
   }
@@ -127,7 +128,7 @@ tcpFixServer.prototype.sendFixMsg = function(args){
   this.sendCheckedMsg(cb,msg);
 };
 
-tcpFixServer.prototype.sendCheckedMsg = function(cb,msg){
+TcpFixServer.prototype.sendCheckedMsg = function(cb,msg){
   try{
     this.fixInitiator.send(cb,msg);
   }catch(err){
@@ -139,7 +140,7 @@ tcpFixServer.prototype.sendCheckedMsg = function(cb,msg){
 
 //Overridden FIX listeners
 
-tcpFixServer.prototype.onLogonListener = function(emitter,sessionID){
+TcpFixServer.prototype.onLogonListener = function(emitter,sessionID){
   this.listeners.onLogonListener(emitter,sessionID); //super
   this.fixInitiator.setConnectionEstablished(true);
   Logger.log('@@@@@@@@@ SESSIONID ' + sessionID);
@@ -148,7 +149,7 @@ tcpFixServer.prototype.onLogonListener = function(emitter,sessionID){
   this.connectionHandler.socketWriteEvent('connectionEstablished',codedSessionId);
 };
 
-tcpFixServer.prototype.onLogoutListener = function(emitter,sessionID){
+TcpFixServer.prototype.onLogoutListener = function(emitter,sessionID){
   this.listeners.onLogoutListener(emitter,sessionID); //super
   this.fixInitiator.setConnectionEstablished(false);
   Logger.log('****** SESSIONID ' + sessionID);
@@ -157,7 +158,7 @@ tcpFixServer.prototype.onLogoutListener = function(emitter,sessionID){
   this.connectionHandler.socketWriteEvent('connectionClosed',codedSessionId);
 };
 
-tcpFixServer.prototype.fromAppListener = function(emitter,msg,sessionID){
+TcpFixServer.prototype.fromAppListener = function(emitter,msg,sessionID){
   this.listeners.fromAppListener(emitter,msg,sessionID); //super
   Logger.log('$$$$$$$$ DOBIO PORUKU OD ACCEPTORA ' + msg);
   var codedFixMsg = Coder.createZeroDelimitedFixMsg(msg.message);
@@ -168,7 +169,7 @@ tcpFixServer.prototype.fromAppListener = function(emitter,msg,sessionID){
 
 //Intern methods
 
-tcpFixServer.prototype.start = function(port){
+TcpFixServer.prototype.start = function(port){
   if (!port) throw new Error ('No port provided!');
   if (typeof port !== 'number') throw new Error('Port must be a number!');
   this.server.listen(port,this.onListening.bind(this));
@@ -176,7 +177,7 @@ tcpFixServer.prototype.start = function(port){
 
 //Event listeners
 
-tcpFixServer.prototype.onConnection = function(socket){
+TcpFixServer.prototype.onConnection = function(socket){
   Logger.log('New connection - ' + socket.remoteAddress);
   //Listeners
   socket.on('error',this.onError.bind(this,socket));
@@ -184,21 +185,21 @@ tcpFixServer.prototype.onConnection = function(socket){
   socket.on('data', this.onData.bind(this, socket));
 };
 
-tcpFixServer.prototype.onListening = function(){
+TcpFixServer.prototype.onListening = function(){
   Logger.log('Server started!');
 };
 
-tcpFixServer.prototype.onError = function(socket){
+TcpFixServer.prototype.onError = function(socket){
   Logger.log('Error with ' +  socket.remoteAddress + '\n Closing connection');
   this.destroy();
 };
 
-tcpFixServer.prototype.onClose = function(){
+TcpFixServer.prototype.onClose = function(){
   Logger.log('Socket closed.');
   this.destroy();
 };
 
-tcpFixServer.prototype.onData = function(socket, buffer){
+TcpFixServer.prototype.onData = function(socket, buffer){
   var ctor = null;
   switch(buffer[0]) { 
     case 99:
@@ -219,21 +220,12 @@ tcpFixServer.prototype.onData = function(socket, buffer){
   new ctor(socket, buffer.slice(1), this);
 };
 
-//Static methods - TODO will become session hive class
-
-tcpFixServer.checkCredentials = function(name, password){
-  var correct = ((name === 'luka') && (password === 'kp'));
-  Logger.log('For testing only: ' + name + ' : ' + password + ' - ' + correct + ' credentials!');
-  return correct;
-  //TODO real DB checking
-};
-
 //TODO remove, just for testing
-tcpFixServer.validSecret = null;
+TcpFixServer.validSecret = null;
 
-tcpFixServer.checkSecret = function(secret){
-  Logger.log(tcpFixServer.validSecret + ' === ' + secret);
-  if (tcpFixServer.validSecret.equals(secret)){
+TcpFixServer.checkSecret = function(secret){
+  Logger.log(TcpFixServer.validSecret + ' === ' + secret);
+  if (TcpFixServer.validSecret.equals(secret)){
     return true;
   }else{
     return false;
@@ -241,9 +233,9 @@ tcpFixServer.checkSecret = function(secret){
   //TODO real DB checking
 };
 
-tcpFixServer.generateSecret = function(){
+TcpFixServer.generateSecret = function(){
   var rand16 = crypto.randomBytes(16);
-  tcpFixServer.validSecret = rand16;
+  TcpFixServer.validSecret = rand16;
   Logger.log('=-=-= IZGENERISANI SECRET =-=-= ' + rand16);
   return rand16;
 };
@@ -283,8 +275,12 @@ var _zeroBuffer = new Buffer(1);
 _zeroBuffer[0] = 0;
 
 CredentialsHandler.prototype.executeOnReadingFinished = function(){
-  if (tcpFixServer.checkCredentials(this.parser.getName(),this.parser.getPassword())){
-    var secret = tcpFixServer.generateSecret();
+  CredentialsChecker.check(this.parser.getName(),this.parser.getPassword(), this.onCheck.bind(this));
+};
+
+CredentialsHandler.prototype.onCheck = function (result) {
+  if (result) {
+    var secret = TcpFixServer.generateSecret();
     //this.socketWriteResult(secret.toString());
     this.socket.write('r');
     this.socket.write(secret);
@@ -294,7 +290,7 @@ CredentialsHandler.prototype.executeOnReadingFinished = function(){
   }
   var s = this.socket;
   this.socket = null;
-  s.destroy();
+  s.end();
   //TODO maybe check if there is anything after second zero, error? - got buffer but not needed atm
 };
 
@@ -327,7 +323,7 @@ SessionHandler.prototype.readingFinished = function(){
 
 SessionHandler.prototype.executeOnReadingFinished = function(bufferLeftover){
   var s = this.socket;
-  if (tcpFixServer.checkSecret(this.parser.getSecret())){
+  if (TcpFixServer.checkSecret(this.parser.getSecret())){
     Logger.log('++DOBAR SECRET!++');
     this.socketWriteResult('correct_secret');
     var myTcpParent = this.myTcpParent;
@@ -374,4 +370,4 @@ RequestHandler.prototype.executeOnReadingFinished = function(){
   this.parser.callMethod(this.myTcpParent);
 };
 
-module.exports = tcpFixServer;
+module.exports = TcpFixServer;
