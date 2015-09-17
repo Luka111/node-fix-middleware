@@ -90,13 +90,19 @@ tcpFixServer.prototype.startFixInitiator = function(args){
     throw 'startFixInitiator requires string as the second param!';
   }
   //TODO ovde mora ozbiljan sanity check za ovaj string, jer quickfix puca ako se da los settings string
+  /*
   if (!!this.fixInitiator){
     this.fixInitiator.destroy();
     this.fixInitiator = null;
   }
-  this.fixInitiator = new fixInitiator(settings);
-  this.fixInitiator.start(cb);
-  this.fixInitiator.registerEventListeners(this.listeners);
+  */
+  if (!this.fixInitiator){
+    this.fixInitiator = new fixInitiator(settings);
+    this.fixInitiator.start(cb);
+    this.fixInitiator.registerEventListeners(this.listeners);
+  }else{
+    this.connectionHandler.socketWriteResult('fix_initiator_already_started');
+  }
 };
 
 tcpFixServer.prototype.sendFixMsg = function(args){

@@ -93,7 +93,6 @@ Initiator.prototype.send = function(cb,msg){
     throw new Error('Connection to FIX Acceptor is not established!');
   }
   this.quickfixInitiator.send(msg,this.successfullySent.bind(this,cb));
-  var session = this.quickfixInitiator.getSessions()[0];
 };
 
 Initiator.prototype.successfullySent = function(cb){

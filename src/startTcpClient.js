@@ -44,8 +44,8 @@ function execOnSuccess(msg){
 
 //client options
 var options = {
-  port: 17000
-  //host: '54.172.225.242'
+  port: 17000,
+  host: '54.172.225.242'
 };
 
 //credentials - !

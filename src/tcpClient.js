@@ -120,7 +120,6 @@ tcpClient.prototype.connectionClosed = function(args){
   if (typeof sessionID !== 'object'){
     throw new Error('connectionClosed requires object as the first param! - ' + sessionID);
   }
-  this.executeNextMethod();
 }
 
 //Wrapper around connectionHandler executor 
@@ -309,6 +308,14 @@ SecretConnectionHandler.prototype.executeOnReadingFinished = function(){
         this.executor.destroy();
       }
       this.executor = new FixMsgExecutor(this);
+      break; 
+    case 'fix_initiator_already_started':
+      if (!!this.executor){
+        this.executor.destroy();
+      }
+      this.executor = new FixMsgExecutor(this);
+      Logger.log('FIX initiator already started!');
+      this.myTcpParent.executeNextMethod();
       break; 
     case 'successfully_sent':
       Logger.log('Uspesno poslata FIX poruka!');
