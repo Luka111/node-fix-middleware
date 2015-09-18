@@ -78,7 +78,7 @@ tcpClient.prototype.callMethod = function(methodName,reqArguments){
 //Event listeners from server
 
 tcpClient.prototype.acceptFixMsg = function(args){
-  if (!(args instanceof Array)){
+  if (!(typeof args ==='object' && args instanceof Array)){
     throw new Error('sendFixMsg accepts array of params');
   }
   if (args.length !== 2){
@@ -96,7 +96,7 @@ tcpClient.prototype.acceptFixMsg = function(args){
 }
 
 tcpClient.prototype.connectionEstablished = function(args){
-  if (!(args instanceof Array)){
+  if (!(typeof args ==='object' && args instanceof Array)){
     throw new Error('connectionEstablished accepts array of params');
   }
   if (args.length !== 2){
@@ -114,7 +114,7 @@ tcpClient.prototype.connectionEstablished = function(args){
 }
 
 tcpClient.prototype.connectionClosed = function(args){
-  if (!(args instanceof Array)){
+  if (!(typeof args ==='object' && args instanceof Array)){
     throw new Error('connectionClosed accepts array of params');
   }
   if (args.length !== 2){

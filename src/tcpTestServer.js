@@ -51,7 +51,7 @@ TcpFixServer.prototype.destroy = function(){
 };
 
 TcpFixServer.prototype.callMethod = function(methodName,reqArguments){
-  if (!(reqArguments instanceof Array)){
+  if (!(typeof reqArguments ==='object' && reqArguments instanceof Array)){
     throw 'startFixInitiator accepts array of params';
   }
   var connHandler = reqArguments[reqArguments.length - 1];
@@ -70,7 +70,7 @@ TcpFixServer.prototype.callMethod = function(methodName,reqArguments){
 //RMI
 
 TcpFixServer.prototype.startFixInitiator = function(args){
-  if (!(args instanceof Array)){
+  if (!(typeof args ==='object' && args instanceof Array)){
     throw 'startFixInitiator accepts array of params';
   }
   if (args.length !== 3){
@@ -105,7 +105,7 @@ TcpFixServer.prototype.startFixInitiator = function(args){
 };
 
 TcpFixServer.prototype.sendFixMsg = function(args){
-  if (!(args instanceof Array)){
+  if (!(typeof args ==='object' && args instanceof Array)){
     throw new Error('sendFixMsg accepts array of params');
   }
   if (args.length !== 3){

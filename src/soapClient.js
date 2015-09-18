@@ -90,7 +90,7 @@ soapClient.prototype.recieveFixMessagesHandler = function(err,result){
   }
   var decodedResult = [];
   //TODO testing for all types
-  if (result instanceof Array){
+  if (typeof result === 'object' && result instanceof Array){
     result.forEach(this.decodeArray.bind(this,decodedResult));
   }else{
     if (result instanceof Object){

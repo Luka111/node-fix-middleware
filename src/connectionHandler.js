@@ -105,7 +105,7 @@ ConnectionHandler.prototype.writeBufferArray = function (bufArray, opCode, addZe
   if (!bufArray){
     throw 'bufArray is requried!';
   }
-  if (!(bufArray instanceof Array)){
+  if (!(typeof bufArray ==='object' && bufArray instanceof Array)){
     throw 'first param has to be an array';
   }
   if (bufArray.length === 0){

@@ -7,7 +7,7 @@ IdleCheker.prototype.destroy = function(){
 };
 
 IdleCheker.prototype.check = function(args){
-  if (!(args instanceof Array)){
+  if (!(typeof args ==='object' && args instanceof Array)){
     throw new Error('args must be an array');
   }
   if (args.length !== 2){

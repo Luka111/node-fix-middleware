@@ -1,10 +1,10 @@
-var assert = require('assert');
 var should = require('should');
 var df = require('dateformat');
 
 var tcpServer = require('../src/tcpTestServer.js');
 var tcpClient = require('../src/tcpClient.js');
 var fixAcceptor = require('../src/fix/fixAcceptor.js');
+var Helper = require('./helperFunctions.js');
 
 var settings = '[DEFAULT]\nReconnectInterval=60\nPersistMessages=Y\nFileStorePath=../data\nFileLogPath=../log\n\n[SESSION]\nConnectionType=initiator\nSenderCompID=NODEQUICKFIX\nTargetCompID=ELECTRONIFIE\nBeginString=FIX.4.4\nStartTime=00:00:00\nEndTime=23:59:59\nHeartBtInt=30\nSocketConnectPort=3223\nSocketConnectHost=localhost\nUseDataDictionary=Y\nDataDictionary=../node_modules/node-quickfix/quickfix/spec/FIX44.xml\nResetOnLogon=Y';
 
@@ -82,52 +82,44 @@ describe('fix Acceptor - starting', function(){
   
   var acceptor = new fixAcceptor();
 
-  it('should throw if first param is not null or function - undefined', function(){
+  it('should throw if first param is not undefined or function- null', function(){
     (function(){
-      acceptor.start(undefined);
-    }).should.throw('start accepts function or null as the first param!');
+      acceptor.start(null);
+    }).should.throw('start accepts function or undefined as the first param!');
   });
 
-  it('should throw if first param is not null or function - number', function(){
+  it('should throw if first param is not null or function- number', function(){
     (function(){
       acceptor.start(123);
-    }).should.throw('start accepts function or null as the first param!');
+    }).should.throw('start accepts function or undefined as the first param!');
   });
 
-  it('should throw if first param is not null or function - string', function(){
+  it('should throw if first param is not null or function- string', function(){
     (function(){
       acceptor.start('not_function');
-    }).should.throw('start accepts function or null as the first param!');
+    }).should.throw('start accepts function or undefined as the first param!');
   });
 
 });
 
+var acceptor = new fixAcceptor();
+acceptor.start();
+
+var server = new tcpServer();
+server.start(14000);
+
 describe('Credentials', function(){
   
-  function generate300CharsWord(){
-    var ret = '';
-    for (var i=0; i<300; i++){
-      ret += 'a';
-    }
-    return ret;
-  }
-
-  var server = new tcpServer();
-  server.start(14000);
-
   it('should throw if name is longer than 128 bytes', function(done){
-    var error = new Error('Maximum length exceeded!');
-    var recordedError = null;
-    var originalExceptionListener = process.listeners('uncaughtException').pop();
-    process.removeListener('uncaughtException', originalExceptionListener);
-    process.once('uncaughtException',function(err){
-      recordedError = err;
-      should.equal(error.message,recordedError.message);
-      process.listeners('uncaughtException').push(originalExceptionListener);
-      done();
-    });
-    var name = generate300CharsWord();
-    var client = new tcpClient({port:14000},name,'kp',settings);
+    Helper.replaceOriginalUncaughtExceptionHandler('Maximum length exceeded!',done);
+    var name = Helper.generate300CharsWord();
+    var client = new tcpClient({port:14000},name,'123',settings);
+  });
+
+  it('should throw if password is longer than 128 bytes', function(done){
+    Helper.replaceOriginalUncaughtExceptionHandler('Maximum length exceeded!',done);
+    var pass = Helper.generate300CharsWord();
+    var client = new tcpClient({port:14000},'indata',pass,settings);
   });
 
 });
