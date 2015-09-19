@@ -44,8 +44,8 @@ function execOnSuccess(msg){
 
 //client options
 var options = {
-  port: 17000//,
-  //host: '54.172.225.242'
+  port: 17000,
+  host: '54.172.225.242'
 };
 
 //credentials - !
@@ -53,6 +53,18 @@ var name = 'indata';
 var password = '123';
 
 //starting client
-var client = new tcpClient(options,name,password,settings);
+var client = new tcpClient(options,name,password,settings,executeOnCorrectSecret);
 
-client.sendFixMsg(order);
+function executeOnCorrectSecret(secret,err){
+  if (!!err){
+    throw err;
+  }
+  sendMsgEvery5Sec(secret);
+}
+
+function sendMsgEvery5Sec(secret){
+  client.sendFixMsg(secret,order);
+  setTimeout(sendMsgEvery5Sec.bind(null,secret),5000);
+}
+
+sendMsgEvery5Sec();

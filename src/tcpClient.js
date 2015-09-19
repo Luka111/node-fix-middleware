@@ -34,7 +34,7 @@ ServerEventHandler.prototype.destroy = function(){
 
 //tcp Client
 
-function tcpClient(options,name,password,settings){
+function tcpClient(options,name,password,settings,cbOnSecret){
   if (!options) throw new Error('No options provided!');
   if (typeof options !== 'object') throw new Error('options must be object!');
   if (!options.hasOwnProperty('port')) throw new Error('options must have property port');
@@ -49,16 +49,17 @@ function tcpClient(options,name,password,settings){
   this.methods.connectionEstablished = this.connectionEstablished.bind(this);
   this.methods.connectionClosed = this.connectionClosed.bind(this);
   this.options = options;
-  this.executingAvailable = false;
   this.waitingCallbacks = [];
+  this.availableHandlers = new HandlerContainer();
   var socket = net.createConnection(options);
-  new CarpetConnectionHandler(socket,null,this,null,name,password,settings);
+  new CarpetConnectionHandler(socket,null,this,null,name,password,settings,cbOnSecret);
   //TODO remove, testing
 }
 
 tcpClient.prototype.destroy = function(){
+  this.availableHandlers.destroy();
+  this.availableHandlers = null;
   this.waitingCallbacks = null;
-  this.executingAvailable = null;
   this.options = null;
   this.methods.destroy();
   this.methods = null;
@@ -67,8 +68,8 @@ tcpClient.prototype.destroy = function(){
 
 //methods for extern usage
 
-tcpClient.prototype.sendFixMsg = function(msg){
-  this.execute(this.sendFIXMessage.bind(this,msg));
+tcpClient.prototype.sendFixMsg = function(secret,msg){
+  this.execute(secret,this.sendFIXMessage.bind(this,msg));
 };
 
 tcpClient.prototype.callMethod = function(methodName,reqArguments){
@@ -133,25 +134,29 @@ tcpClient.prototype.connectionClosed = function(args){
 
 //Wrapper around connectionHandler executor 
 
-tcpClient.prototype.execute = function(cb,connectionHandler){
+tcpClient.prototype.execute = function(secret,cb){
   if (!cb){
     Logger.log('&&& Nema metode za izvrsiti!');
     return;
   }
-  if (!this.executingAvailable){
-    Logger.log('&&& Metoda se trenutno ne moze izvrsiti, na cekanje!');
-    this.waitingCallbacks.push(cb);
+  var handler = this.availableHandlers.getBySecret(secret);
+  if (!handler){
+    Logger.log('&&& Metoda se trenutno ne moze izvrsiti jer nema handlera sa ovim secretom',secret,'. Na cekanje!');
+    this.waitingCallbacks.push(new CallbackSecretPair(cb,secret));
   }else{
     Logger.log('&&& Izvrsavam metodu i blokiram sve ostale pozive!');
-    cb.call(this,connectionHandler);
-    this.executingAvailable = false;
+    cb.call(this,handler);
   }
 };
 
 tcpClient.prototype.executeNextMethod = function(connectionHandler){
+  this.availableHandlers.push(connectionHandler);
   Logger.log('&&& Dozvoljavam sve pozive i zovem sledecu metodu (ako je ima ;))!');
-  this.executingAvailable = true;
-  this.execute(this.waitingCallbacks.shift(),connectionHandler);
+  var callbackSecretPair = this.waitingCallbacks.shift();
+  if (!!callbackSecretPair){
+    this.execute(callbackSecretPair.getSecret(),callbackSecretPair.getCb());
+    callbackSecretPair.destroy();
+  }
 };
 
 tcpClient.prototype.sendFIXMessage = function(msg, connectionHandler){
@@ -162,10 +167,11 @@ tcpClient.prototype.sendFIXMessage = function(msg, connectionHandler){
 
 //CarpetConnectionHandler - accepting first byte, if r -> initiating PlainConnectionHandler
 
-function CarpetConnectionHandler(socket,buffer,myTcpParent,parser,name,password,settings){
+function CarpetConnectionHandler(socket,buffer,myTcpParent,parser,name,password,settings,cbOnSecret){
   this.name = name;
   this.password = password;
   this.settings = settings;
+  this.cbOnSecret = cbOnSecret;
   ConnectionHandler.call(this,socket,buffer,myTcpParent,parser);
 }
 
@@ -176,6 +182,7 @@ CarpetConnectionHandler.prototype = Object.create(ConnectionHandler.prototype, {
 }});
 
 CarpetConnectionHandler.prototype.destroy = function(){
+  this.cbOnSecret = null;
   this.settings = null;
   this.password = null;
   this.name = null;
@@ -200,8 +207,9 @@ CarpetConnectionHandler.prototype.onData = function(buffer){
     var myTcpParent = this.myTcpParent;
     var socket = this.socket;
     var settings = this.settings;
+    var cbOnSecret = this.cbOnSecret;
     this.destroy();
-    new PlainConnectionHandler(socket,buffer.slice(1),myTcpParent,settings);
+    new PlainConnectionHandler(socket,buffer.slice(1),myTcpParent,settings,cbOnSecret);
   }
 };
 
@@ -224,8 +232,9 @@ CarpetConnectionHandler.prototype.socketWriteCredentials = function(name,passwor
 
 //PlainConnectionHandler
 
-function PlainConnectionHandler(socket,buffer,myTcpParent,settings){
+function PlainConnectionHandler(socket,buffer,myTcpParent,settings,cbOnSecret){
   this.settings = settings;
+  this.cbOnSecret = cbOnSecret;
   ConnectionHandler.call(this,socket,buffer,myTcpParent, new Parsers.SessionParser());
 }
 
@@ -236,6 +245,7 @@ PlainConnectionHandler.prototype = Object.create(ConnectionHandler.prototype, {c
 }});
 
 PlainConnectionHandler.prototype.destroy = function(){
+  this.cbOnSecret = null;
   this.settings = null;
   ConnectionHandler.prototype.destroy.call(this);
 };
@@ -251,6 +261,7 @@ PlainConnectionHandler.prototype.executeOnReadingFinished = function(){
   var options = this.myTcpParent.options;
   var socket = this.socket;
   var settings = this.settings;
+  var cbOnSecret = this.cbOnSecret;
   //destroy socket + destroy handler (in closed event handler)
   socket.destroy();
   this.socket = null;
@@ -258,15 +269,16 @@ PlainConnectionHandler.prototype.executeOnReadingFinished = function(){
   socket = net.createConnection(options);
   //create new Handler
   var secret = this.parser.getSecret();
-  new SecretConnectionHandler(socket,null,myTcpParent,secret,settings);
+  new SecretConnectionHandler(socket,null,myTcpParent,secret,settings,cbOnSecret);
 };
 
 //SecretConnectionHandler
 
-function SecretConnectionHandler(socket,buffer,myTcpParent,secret,settings){
+function SecretConnectionHandler(socket,buffer,myTcpParent,secret,settings,cbOnSecret){
+  this.secret = secret;
   this.settings = settings;
+  this.cbOnSecret = cbOnSecret;
   ConnectionHandler.call(this,socket,buffer,myTcpParent,new Parsers.ApplicationParser(this));
-  //this.socketWriteSecret(secret.toString());
   this.socket.write('s');
   this.socket.write(secret);
 };
@@ -278,7 +290,9 @@ SecretConnectionHandler.prototype = Object.create(ConnectionHandler.prototype, {
 }});
 
 SecretConnectionHandler.prototype.destroy = function(){
+  this.cbOnSecret = null;
   this.settings = null;
+  this.secret = null;
   ConnectionHandler.prototype.destroy.call(this);
 };
 
@@ -295,9 +309,11 @@ SecretConnectionHandler.prototype.readingFinished = function(){
 
 SecretConnectionHandler.prototype.executeOnReadingFinished = function(){
   var error = this.parser.getError();
-  Logger.log('STA JE ERROR ' + error);
   if (!!error){
     Logger.log('CLIENT: Error ' + error);
+    if (!!this.cbOnSecret){
+      this.cbOnSecret(null,error);
+    }
     var s = this.socket;
     s.destroy();
     this.socket = null;
@@ -306,6 +322,8 @@ SecretConnectionHandler.prototype.executeOnReadingFinished = function(){
   var msg = this.parser.getMsg();
   switch (msg){
     case 'correct_secret':
+      this.cbOnSecret(this.secret);
+      this.cbOnSecret = null;
       if (!!this.executor){
         this.executor.destroy();
       }
@@ -449,5 +467,43 @@ FixMsgExecutor.prototype.sendFIXMessage = function(fixMsg){
   this.handler.sendMethodBuffer(codedFixMsg, 'sendFixMsg');
 };
 
+function HandlerContainer(){
+  this.handlers = [];
+}
+
+HandlerContainer.prototype.destroy = function(){
+  this.handlers = null;
+};
+
+HandlerContainer.prototype.push = function(handler){
+  this.handlers.push(handler);
+};
+
+HandlerContainer.prototype.getBySecret = function(secret){
+  for (var i=0; i<this.handlers.length; i++){
+    if (this.handlers[i].secret === secret){
+      return this.handlers[i];
+    }
+  }
+  return null;
+};
+
+function CallbackSecretPair(cb,secret){
+  this.cb = cb;
+  this.secret = secret;
+}
+
+CallbackSecretPair.prototype.destroy = function(){
+  this.cb = null;
+  this.secret = null;
+};
+
+CallbackSecretPair.prototype.getSecret = function(){
+  return this.secret;
+};
+
+CallbackSecretPair.prototype.getCb = function(){
+  return this.cb;
+};
 
 module.exports = tcpClient;

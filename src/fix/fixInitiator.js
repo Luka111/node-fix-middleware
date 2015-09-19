@@ -57,6 +57,8 @@ function Initiator(settings){
 
 Initiator.prototype.destroy = function(){
   this.quickfixInitiator.stop();
+  //TODO maybe wait for logout event and then destroy everything?
+  this.quickfixInitiator.removeAllListeners();
   this.quickfixInitiator = null;
   this.started = null;
   this.connectionEstablished = null;
