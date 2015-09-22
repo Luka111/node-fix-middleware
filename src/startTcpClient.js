@@ -29,6 +29,23 @@ var order = {
   }
 };
 
+var newOrder = {
+  8: 'FIX.4.4',
+  35: 'D',
+  49: 'NODEQUICKFIX',
+  56: 'ELECTRONIFIE',
+  11: '0E0Z86K00000',
+  48: '06051GDX4',
+  22: 1,
+  38: 200,
+  40: 2,
+  54: 1,
+  55: 'BAC',
+  218: 100,
+  60: df(new Date(), "yyyymmdd-HH:MM:ss.l"),
+  423: 6
+};
+
 var invalidOrder = {
   header: {
     8: 'FIX.4.4',
@@ -44,8 +61,7 @@ function execOnSuccess(msg){
 
 //client options
 var options = {
-  port: 17000,
-  host: '54.172.225.242'
+  port: 17000
 };
 
 //credentials - !
@@ -55,16 +71,16 @@ var password = '123';
 //starting client
 var client = new tcpClient(options,name,password,settings,executeOnCorrectSecret);
 
+var fixMessages = require('../fixmessages/set2.json');
+
 function executeOnCorrectSecret(secret,err){
   if (!!err){
     throw err;
   }
-  sendMsgEvery5Sec(secret);
+  sendOrderEvery5Sec(secret,fixMessages);
 }
 
-function sendMsgEvery5Sec(secret){
-  client.sendFixMsg(secret,order);
-  setTimeout(sendMsgEvery5Sec.bind(null,secret),5000);
+function sendOrderEvery5Sec(secret,fixMessages){
+  client.sendFixMsg(secret,fixMessages.pop());
+  setTimeout(sendOrderEvery5Sec.bind(null,secret,fixMessages),5000);
 }
-
-sendMsgEvery5Sec();

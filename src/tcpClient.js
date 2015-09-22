@@ -226,7 +226,7 @@ CarpetConnectionHandler.prototype.socketWriteCredentials = function(name,passwor
   if (!this.isString(password)){
     throw new Error('socketWriteCredentials: accepts buffer as argument');
   }
-  this.writeBufferArray([name, password], 'c');
+  this.writeBufferArray([name, password], 'c', true);
 };
 
 
@@ -433,6 +433,7 @@ FixInitiatorExecutor.prototype.sendFIXInitiatorSettings = function(settings){
   if (typeof settings !== 'string'){
     throw new Error('sendFIXInitiatorSettings: settings param type must be string');
   }
+  settings += String.fromCharCode(0);
   this.handler.sendMethodBuffer(settings, 'startFixInitiator');
 };
 
@@ -459,10 +460,8 @@ FixMsgExecutor.prototype.sendFIXMessage = function(fixMsg){
   if (typeof fixMsg !== 'object'){
     throw new Error('sendFIXMessage: fixMsg param type must be object');
   }
-  if (!fixMsg.hasOwnProperty('header')){
-    throw new Error('sendFIXMessage: fixMsg param must contain property header');
-  }
-  var codedFixMsg = Coder.createZeroDelimitedFixMsg(fixMsg);
+  //TODO sanity check if codedFixMsg is not nested - we need 1 level depth!
+  var codedFixMsg = Coder.generateZeroDelimitedTagValueFlat(fixMsg);
   this.handler.sendMethodBuffer(codedFixMsg, 'sendFixMsg');
 };
 

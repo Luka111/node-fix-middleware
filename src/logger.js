@@ -1,6 +1,6 @@
 'use strict';
 
-var __LOG = false;
+var __LOG = true;
 
 function log(string){
   if (!!__LOG){

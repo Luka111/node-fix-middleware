@@ -67,7 +67,7 @@ Coder.prototype.createZeroDelimitedFixMsg = function(obj){
 Coder.prototype.createZeroDelimitedString = function(obj,structNames){
   var result = {value: ''};
   structNames.forEach(this.generatePerProperty.bind(this,obj,result));
-  return result.value;
+  return result.value + String.fromCharCode(0);
 }
 
 Coder.prototype.generatePerProperty = function(obj,result,structName){
@@ -89,8 +89,11 @@ Coder.prototype.generateZeroDelimitedTagValue = function(obj){
       res += (key + String.fromCharCode(0) + obj[key] + String.fromCharCode(0));
     }
   }
-  res += String.fromCharCode(0);
   return res;
+};
+
+Coder.prototype.generateZeroDelimitedTagValueFlat = function(obj){
+  return this.generateZeroDelimitedTagValue(obj) + String.fromCharCode(0);
 };
 
 //Intern coding functions

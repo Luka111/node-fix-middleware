@@ -349,7 +349,7 @@ MethodByteWorker.prototype.eatByte = function(bufferItem,parser){
     }else{
       parser.requiredZeros = undefined;
       Logger.log('STA BRE ' + parser.operationName);
-      throw new Error(parser.operationName + 'method is not implemented');
+      throw new Error(parser.operationName + ' method is not implemented');
     }
   }
 };
@@ -385,7 +385,6 @@ function TagValueByteWorker(objForFillCtor){
   this.objForFillCtor = objForFillCtor;
   this.objForFill = new objForFillCtor;
   this.zeroCnt = 0;
-  this.tagsCnt = 0;
   ByteWorker.call(this);
   Logger.log('NAPRAVLJEN TagValueByteWorker!!!');
 }
@@ -397,7 +396,6 @@ TagValueByteWorker.prototype = Object.create(ByteWorker.prototype, {constructor:
 }});
 
 TagValueByteWorker.prototype.destroy = function(){
-  this.tagsCnt = null;
   this.zeroCnt = null
   this.objForFill.destroy();
   this.objForFill = null;
@@ -415,7 +413,6 @@ TagValueByteWorker.prototype.reset = function(){
   this.value = '';
   this.objForFill = new this.objForFillCtor;
   this.zeroCnt = 0;
-  this.tagsCnt = 0;
 };
 
 TagValueByteWorker.prototype.eatByte = function(bufferItem,parser){
@@ -448,9 +445,7 @@ TagByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker){
       parentByteWorker.byteWorker.destroy();
       parentByteWorker.byteWorker = new ValueByteWorker(); 
     }else if (parentByteWorker.zeroCnt === 1){
-      parentByteWorker.zeroCnt++;
-      parentByteWorker.tagsCnt++;
-    }else if (parentByteWorker.zeroCnt === 2){
+      console.log('EVO GA MACAK',parentByteWorker.objForFill);
       parser.reqArguments.push(parentByteWorker.objForFill);
       parser.zeroCnt++;
       parser.byteWorker.reset(); 
@@ -477,13 +472,9 @@ ValueByteWorker.prototype.destroy = function(){
 ValueByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker){
   if (bufferItem === 0){
     parentByteWorker.zeroCnt++;
-    //TODO sanity check.. throw!
     parentByteWorker.value = parser.bufferHandler.generateNextWord();
-    if (!parentByteWorker.objForFill[parentByteWorker.objForFill.tagsArray[parentByteWorker.tagsCnt]]){
-      //throw new Error('Invalid FIX message structure: end of request expected, instead got tag/value - { ' + parentByteWorker.tag + ':' + parentByteWorker.value + ' } ');
-      throw new Error('Invalid FIX message structure: end of request expected');
-    }
-    parentByteWorker.objForFill[parentByteWorker.objForFill.tagsArray[parentByteWorker.tagsCnt]][parentByteWorker.tag] = parentByteWorker.value;
+    //TODO sanity check.. throw!
+    parentByteWorker.objForFill.fill(parentByteWorker.tag,parentByteWorker.value);
     parentByteWorker.tag = '';
     parentByteWorker.value = '';
     parentByteWorker.byteWorker.destroy();
@@ -500,6 +491,10 @@ FIXMessage.prototype.fixTagRegexp = /^[1-9][0-9]*$/;
 
 FIXMessage.prototype.tagsArray = ['header','tags','trailer']; //TODO groups
 
+FIXMessage.prototype.headerTags = [8,9,35,1128,1156,1129,49,56,115,128,90,91,34,50,142,57,143,116,144,129,145,43,97,52,122,212,213,347,369]; //source http://www.fixtradingcommunity.org/FIXimate/FIXimate3.0/latestEP/index.html
+
+FIXMessage.prototype.trailerTags = [93,89,10]; //source http://www.fixtradingcommunity.org/FIXimate/FIXimate3.0/latestEP/index.html
+
 FIXMessage.prototype.destroy = function(){
   this.tags = null;
   this.header = null;
@@ -510,6 +505,16 @@ FIXMessage.prototype.reset = function(){
   this.header = {};
   this.tags = {};
   this.trailer = {};
+};
+
+FIXMessage.prototype.fill = function(tag,value){
+  if (this.headerTags.indexOf(parseInt(tag)) !== -1){
+    this.header[tag] = value;
+  }else if (this.trailerTags.indexOf(parseInt(tag)) !== -1){
+    this.trailer[tag] = value;
+  }else{
+    this.tags[tag] = value;
+  }
 };
 
 function SessionIDMessage(){
@@ -527,6 +532,10 @@ SessionIDMessage.prototype.tagsArray = ['SessionID']; //TODO groups
 
 SessionIDMessage.prototype.reset = function(){
   this.SessionID = {};
+};
+
+SessionIDMessage.prototype.fill = function(tag,value){
+  this.SessionID[tag] = value;
 };
 
 module.exports = {

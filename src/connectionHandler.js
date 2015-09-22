@@ -60,6 +60,10 @@ ConnectionHandler.prototype.sendMethodBuffer = function(args,operation){
   if (!this.isString(args)){
     throw new Error('first arg must be a string!');
   }
+  //NOTE, last char of args must be 0, this method is not adding 0 at the end
+  if (args[args.length-1] !== String.fromCharCode(0)){
+    throw new Error('last char of args must be 0!');
+  }
   if (!operation){
     throw new Error('operation is required!');
   }
@@ -69,7 +73,6 @@ ConnectionHandler.prototype.sendMethodBuffer = function(args,operation){
   this.socket.write(operation, 'utf8');
   this.socket.write(_zeroBuffer);
   this.socket.write(args, 'utf8');
-  this.socket.write(_zeroBuffer);
 };
 
 ConnectionHandler.prototype.writeData = function (data, operation, addZero) {
@@ -97,8 +100,8 @@ ConnectionHandler.prototype.writeData = function (data, operation, addZero) {
   }
 };
 
-ConnectionHandler.prototype.outBuf = function (data) {
-  this.writeData(data, '', true);
+ConnectionHandler.prototype.outBuf = function (addZero, data) {
+  this.writeData(data, '', addZero);
 };
 
 ConnectionHandler.prototype.writeBufferArray = function (bufArray, opCode, addZero) {
@@ -121,7 +124,7 @@ ConnectionHandler.prototype.writeBufferArray = function (bufArray, opCode, addZe
     throw 'opCode must be length 1!';
   }
   this.socket.write(opCode, 'utf8');
-  bufArray.forEach(this.outBuf.bind(this));
+  bufArray.forEach(this.outBuf.bind(this, addZero));
 };
 
 ConnectionHandler.prototype.socketWriteSecret = function(secret){
@@ -183,7 +186,10 @@ ConnectionHandler.prototype.socketWriteEvent = function(eventName,msg){
   if (!this.isString(msg)){
     throw new Error('socketWriteEvent: accepts string as argument');
   }
-  this.writeBufferArray([eventName,msg], 'o');
+  //removed writeBufferArray because last zero in argument passing is removed, and addZero is used for all array elements - here we need to add zero to eventName, but not for msg
+  this.socket.write('o' + eventName, 'utf8');
+  this.socket.write(_zeroBuffer);
+  this.socket.write(msg, 'utf8');
 };
 
 //template method

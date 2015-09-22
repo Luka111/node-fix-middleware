@@ -46,7 +46,9 @@ TcpFixServer.prototype.destroy = function(){
   this.executingMethod = null;
   this.server.close();
   this.server = null;
-  this.methods.destroy();
+  if (!!this.methods){
+    this.methods.destroy();
+  }
   this.methods = null;
 };
 
@@ -286,7 +288,7 @@ SessionHandler.prototype.destroy = function(){
 };
 
 //override, adding catch functionallity - REMOVED IN TEST SERVER
-//SessionHandler.prototype.onData = ConnectionHandler.prototype.onDataCatch;
+//CredentialsHandler.prototype.onData = ConnectionHandler.prototype.onDataCatch;
 
 SessionHandler.prototype.readingFinished = function(){
   return this.parser.doneReading();
@@ -329,7 +331,9 @@ RequestHandler.prototype = Object.create(ConnectionHandler.prototype, {construct
 
 RequestHandler.prototype.destroy = function(){
   Logger.log('(((( REQUEST HANDLER: UBIJAM SE ))))');
-  this.listeners.destroy();
+  if (!!this.listeners){
+    this.listeners.destroy();
+  }
   this.listeners = null;
   if (!!this.fixInitiator){
     this.fixInitiator.destroy();
@@ -342,7 +346,7 @@ RequestHandler.prototype.destroy = function(){
 };
 
 //override, adding catch functionallity - REMOVED IN TEST SERVER
-//RequestHandler.prototype.onData = ConnectionHandler.prototype.onDataCatch;
+//CredentialsHandler.prototype.onData = ConnectionHandler.prototype.onDataCatch;
 
 RequestHandler.prototype.readingFinished = function(){
   return this.parser.zeroCntEqualsRequiredZeros();
