@@ -442,7 +442,8 @@ TagByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker){
       parentByteWorker.tag = parser.bufferHandler.generateNextWord();
       //TODO sanity check.. throw!
       if (!parentByteWorker.objForFill.fixTagRegexp.test(parentByteWorker.tag)){
-        throw new Error('Invalid FIX message structure: tag value ' + parentByteWorker.tag + ' is incorrect');
+        //throw new Error('Invalid FIX message structure: tag value ' + parentByteWorker.tag + ' is incorrect');
+        throw new Error('Invalid FIX message structure: tag is incorrect');
       }
       parentByteWorker.byteWorker.destroy();
       parentByteWorker.byteWorker = new ValueByteWorker(); 
@@ -479,7 +480,8 @@ ValueByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker)
     //TODO sanity check.. throw!
     parentByteWorker.value = parser.bufferHandler.generateNextWord();
     if (!parentByteWorker.objForFill[parentByteWorker.objForFill.tagsArray[parentByteWorker.tagsCnt]]){
-      throw new Error('Invalid FIX message structure: end of request expected, instead got tag/value - { ' + parentByteWorker.tag + ':' + parentByteWorker.value + ' } ');
+      //throw new Error('Invalid FIX message structure: end of request expected, instead got tag/value - { ' + parentByteWorker.tag + ':' + parentByteWorker.value + ' } ');
+      throw new Error('Invalid FIX message structure: end of request expected');
     }
     parentByteWorker.objForFill[parentByteWorker.objForFill.tagsArray[parentByteWorker.tagsCnt]][parentByteWorker.tag] = parentByteWorker.value;
     parentByteWorker.tag = '';

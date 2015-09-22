@@ -1,0 +1,4 @@
+#!/bin/bash
+cat $1 | grep -P "\[.*\x01.*\]" | sed "s/.*\[\(.*\)\]/{\n\1}\n/" | sed "s/\x01\([^}]\)/\n\1/g" | sed "s/\x01//g" | sed "s/\(.*\)=\(.*\)/\"\1\":\"\2\",/" | sed "s/}\",/\"\n}/g" | sed "s/\x0d/,/g" | sed "$ d" > $2
+echo "[" | cat - $2 > temp && mv temp $2
+echo "]" >> $2

@@ -124,3 +124,60 @@ describe('Credentials', function(){
 
 });
 
+describe('Sending FIX messages', function(){
+
+  this.timeout(10000);
+
+  var df = require('dateformat');
+
+  //client options
+  var options = {
+    port: 14000
+  };
+  //credentials - !
+  var name = 'indata';
+  var password = '123';
+
+  //settings for starting fix initiator
+  var settings = '[DEFAULT]\nReconnectInterval=60\nPersistMessages=Y\nFileStorePath=../data\nFileLogPath=../log\n\n[SESSION]\nConnectionType=initiator\nSenderCompID=NODEQUICKFIX\nTargetCompID=ELECTRONIFIE\nBeginString=FIX.4.4\nStartTime=00:00:00\nEndTime=23:59:59\nHeartBtInt=30\nSocketConnectPort=3223\nSocketConnectHost=localhost\nUseDataDictionary=Y\nDataDictionary=../node_modules/node-quickfix/quickfix/spec/FIX44.xml\nResetOnLogon=Y';
+
+  it('should throw if FIX message tag contains non-numeric character', function(done){
+
+    //starting client
+    var client = new tcpClient(options,name,password,settings,executeOnCorrectSecret);
+
+    //invalid message example - incorrect tag
+    var order = {
+      header: {
+        a8: 'FIX.4.4',
+        35: 'D',
+        49: 'NODEQUICKFIX',
+        56: 'ELECTRONIFIE'
+      },
+      tags: {
+        11: '0E0Z86K00000',
+        48: '06051GDX4',
+        22: 1,
+        38: 200,
+        40: 2,
+        54: 1,
+        55: 'BAC',
+        218: 100,
+        60: df(new Date(), "yyyymmdd-HH:MM:ss.l"),
+        423: 6
+      }
+    };
+
+    //function to execute when server accepts secret
+    function executeOnCorrectSecret(secret,err){
+      if (!!err){
+        throw err;
+      }
+      client.sendFixMsg(secret,order);
+    }
+  
+    Helper.replaceOriginalUncaughtExceptionHandler('Invalid FIX message structure: tag is incorrect',done);
+  });
+
+});
+
