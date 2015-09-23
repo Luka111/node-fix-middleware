@@ -34,7 +34,7 @@ ServerEventHandler.prototype.destroy = function(){
 
 //tcp Client
 
-function tcpClient(options,name,password,settings,cbOnSecret){
+function TcpClient(options,name,password,settings,cbOnSecret){
   if (!options) throw new Error('No options provided!');
   if (typeof options !== 'object') throw new Error('options must be object!');
   if (!options.hasOwnProperty('port')) throw new Error('options must have property port');
@@ -56,7 +56,7 @@ function tcpClient(options,name,password,settings,cbOnSecret){
   //TODO remove, testing
 }
 
-tcpClient.prototype.destroy = function(){
+TcpClient.prototype.destroy = function(){
   this.availableHandlers.destroy();
   this.availableHandlers = null;
   this.waitingCallbacks = null;
@@ -68,17 +68,17 @@ tcpClient.prototype.destroy = function(){
 
 //methods for extern usage
 
-tcpClient.prototype.sendFixMsg = function(secret,msg){
+TcpClient.prototype.sendFixMsg = function(secret,msg){
   this.execute(secret,this.sendFIXMessage.bind(this,msg));
 };
 
-tcpClient.prototype.callMethod = function(methodName,reqArguments){
+TcpClient.prototype.callMethod = function(methodName,reqArguments){
   this.methods.callMethod(methodName,reqArguments);
 }
 
 //Event listeners from server
 
-tcpClient.prototype.acceptFixMsg = function(args){
+TcpClient.prototype.acceptFixMsg = function(args){
   if (!(typeof args ==='object' && args instanceof Array)){
     throw new Error('sendFixMsg accepts array of params');
   }
@@ -93,10 +93,10 @@ tcpClient.prototype.acceptFixMsg = function(args){
   if (!(connHandler instanceof SecretConnectionHandler)){
     throw new Error('sendFixMsg requires SecretConnectionHandler as the second param! - ' + connHandler);
   }
-  Logger.log('!=!=!=!=****!=!=!=! DOBIO SAM OVU FIX PORUKU SA SERVERA ' + msg);
+  Logger.log('!=!=!=!=****!=!=!=! DOBIO SAM OVU FIX PORUKU SA SERVERA ' + JSON.stringify(msg));
 }
 
-tcpClient.prototype.connectionEstablished = function(args){
+TcpClient.prototype.connectionEstablished = function(args){
   if (!(typeof args ==='object' && args instanceof Array)){
     throw new Error('connectionEstablished accepts array of params');
   }
@@ -114,7 +114,7 @@ tcpClient.prototype.connectionEstablished = function(args){
   this.executeNextMethod(connHandler);
 }
 
-tcpClient.prototype.connectionClosed = function(args){
+TcpClient.prototype.connectionClosed = function(args){
   if (!(typeof args ==='object' && args instanceof Array)){
     throw new Error('connectionClosed accepts array of params');
   }
@@ -134,7 +134,7 @@ tcpClient.prototype.connectionClosed = function(args){
 
 //Wrapper around connectionHandler executor 
 
-tcpClient.prototype.execute = function(secret,cb){
+TcpClient.prototype.execute = function(secret,cb){
   if (!cb){
     Logger.log('&&& Nema metode za izvrsiti!');
     return;
@@ -149,7 +149,7 @@ tcpClient.prototype.execute = function(secret,cb){
   }
 };
 
-tcpClient.prototype.executeNextMethod = function(connectionHandler){
+TcpClient.prototype.executeNextMethod = function(connectionHandler){
   this.availableHandlers.push(connectionHandler);
   Logger.log('&&& Dozvoljavam sve pozive i zovem sledecu metodu (ako je ima ;))!');
   var callbackSecretPair = this.waitingCallbacks.shift();
@@ -159,7 +159,7 @@ tcpClient.prototype.executeNextMethod = function(connectionHandler){
   }
 };
 
-tcpClient.prototype.sendFIXMessage = function(msg, connectionHandler){
+TcpClient.prototype.sendFIXMessage = function(msg, connectionHandler){
   if (!!connectionHandler && !!connectionHandler.executor){
     connectionHandler.executor.sendFIXMessage(msg);
   }
@@ -504,4 +504,4 @@ CallbackSecretPair.prototype.getCb = function(){
   return this.cb;
 };
 
-module.exports = tcpClient;
+module.exports = TcpClient;

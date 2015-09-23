@@ -86,6 +86,9 @@ Coder.prototype.generateZeroDelimitedTagValue = function(obj){
   }
   for (var key in obj){
     if (obj.hasOwnProperty(key)){
+      if (typeof obj[key] === 'object'){
+        throw new Error('Value must be plain type (not object)');
+      }
       res += (key + String.fromCharCode(0) + obj[key] + String.fromCharCode(0));
     }
   }

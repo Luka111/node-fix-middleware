@@ -445,7 +445,6 @@ TagByteWorker.prototype.eatByte = function(bufferItem,parser,parentByteWorker){
       parentByteWorker.byteWorker.destroy();
       parentByteWorker.byteWorker = new ValueByteWorker(); 
     }else if (parentByteWorker.zeroCnt === 1){
-      console.log('EVO GA MACAK',parentByteWorker.objForFill);
       parser.reqArguments.push(parentByteWorker.objForFill);
       parser.zeroCnt++;
       parser.byteWorker.reset(); 

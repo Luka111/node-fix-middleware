@@ -148,24 +148,20 @@ describe('Sending FIX messages', function(){
 
     //invalid message example - incorrect tag
     var order = {
-      header: {
-        a8: 'FIX.4.4',
-        35: 'D',
-        49: 'NODEQUICKFIX',
-        56: 'ELECTRONIFIE'
-      },
-      tags: {
-        11: '0E0Z86K00000',
-        48: '06051GDX4',
-        22: 1,
-        38: 200,
-        40: 2,
-        54: 1,
-        55: 'BAC',
-        218: 100,
-        60: df(new Date(), "yyyymmdd-HH:MM:ss.l"),
-        423: 6
-      }
+      a8: 'FIX.4.4',
+      35: 'D',
+      49: 'NODEQUICKFIX',
+      56: 'ELECTRONIFIE',
+      11: '0E0Z86K00000',
+      48: '06051GDX4',
+      22: 1,
+      38: 200,
+      40: 2,
+      54: 1,
+      55: 'BAC',
+      218: 100,
+      60: df(new Date(), "yyyymmdd-HH:MM:ss.l"),
+      423: 6
     };
 
     //function to execute when server accepts secret
